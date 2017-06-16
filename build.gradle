@@ -1,0 +1,47 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath group: 'com.linkedin.pygradle', name: 'pygradle-plugin', version: '0.5.7'
+    }
+}
+
+apply plugin: 'com.linkedin.python-web-app'
+
+version = "1.0"
+
+python {
+    testDir = file('tests')
+}
+
+dependencies {
+    python 'pypi:tornado:4.5.1'
+    python 'pypi:prov:1.5.0'
+    python 'pypi:backports_abc:0.5'
+    python 'pypi:singledispatch:3.4.0.3'
+    python 'pypi:requests:2.18.1'
+    python 'pypi:gunicorn:19.7.1'
+    test 'pypi:httpretty:0.8.14'
+}
+
+repositories {
+    // using a local repository
+    ivy{
+        name 'pypi-local'
+        url "/home/user/pivy/"
+        layout 'pattern' , {
+            artifact '[organisation]/[module]/[revision]/[artifact]-[revision](-[classifier]).[ext]'
+            ivy '[organisation]/[module]/[revision]/[module]-[revision].ivy'
+        }
+    }
+    // using a web repository
+    ivy{
+        name 'pypi-remote'
+        url "http://attx-dev:5039/"
+        layout 'pattern' , {
+              artifact '[organisation]/[module]/[revision]/[artifact]-[revision](-[classifier]).[ext]'
+              ivy '[organisation]/[module]/[revision]/[module]-[revision].ivy'
+        }
+    }
+}

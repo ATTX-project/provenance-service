@@ -1,0 +1,6 @@
+tornado==4.5.1
+prov==1.5.0
+backports_abc==0.5
+singledispatch==3.4.0.3
+requests==2.18.1
+gunicorn==19.7.1
