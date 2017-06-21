@@ -19,6 +19,11 @@ dependencies {
     python 'pypi:jsonschema:2.6.0'
     python 'pypi:falcon:1.2.0'
     python 'pypi:requests:2.18.1'
+    python 'pypi:SPARQLWrapper:1.8.0'
+    python 'pypi:rdflib:4.2.2'
+    python 'pypi:rdflib-jsonld:0.4.0'
+    python 'pypi:prov:1.5.0'
+    python 'pypi:PyLD:0.7.2'
     python 'pypi:gunicorn:19.7.1'
     test 'pypi:httpretty:0.8.14'
 }
