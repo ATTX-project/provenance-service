@@ -3,7 +3,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath group: 'com.linkedin.pygradle', name: 'pygradle-plugin', version: '0.5.7'
+        classpath group: 'com.linkedin.pygradle', name: 'pygradle-plugin', version: '0.6.1'
     }
 }
 
@@ -16,10 +16,8 @@ python {
 }
 
 dependencies {
-    python 'pypi:tornado:4.5.1'
-    python 'pypi:prov:1.5.0'
-    python 'pypi:backports_abc:0.5'
-    python 'pypi:singledispatch:3.4.0.3'
+    python 'pypi:jsonschema:2.6.0'
+    python 'pypi:falcon:1.2.0'
     python 'pypi:requests:2.18.1'
     python 'pypi:gunicorn:19.7.1'
     test 'pypi:httpretty:0.8.14'

@@ -1,23 +1,18 @@
-import tornado.ioloop
-import tornado.web
+import falcon
+from prov.utils.logs import app_logger
+
+api_version = "0.1"
 
 
-class MainHandler(tornado.web.RequestHandler):
-    """Hellow world handler."""
+class HealthCheck(object):
+    """Create HealthCheck class."""
 
-    def get(self):
-        """Handle get request."""
-        self.write("Hello, world")
-
-
-def make_app():
-    """Start tornado app."""
-    return tornado.web.Application([
-        (r"/", MainHandler),
-    ])
+    def on_get(self, req, resp):
+        """Respond on GET request to map endpoint."""
+        resp.status = falcon.HTTP_200
+        app_logger.info('Finished operations on /health GET Request.')
 
 
-if __name__ == "__main__":
-    app = make_app()
-    app.listen(8888)
-    tornado.ioloop.IOLoop.current().start()
+webapp = falcon.API()
+webapp.add_route('/health', HealthCheck())
+app_logger.info('App is running.')
