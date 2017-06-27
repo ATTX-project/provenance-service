@@ -156,12 +156,12 @@ setup(
         '': ['*.json']
     },
     include_package_data=True,
-    name='falcon-pygradle',
+    name='provenance-service',
     # version='1.0.0',  # This is not read instead Gradle build version is used
     description='Provenance Service',
     # entry_points='''
     #     [console_scripts]
-    #     gmapi=gm_api.gmapi:main
+    #     provapi=prov.provapi:main
     # ''',
     author='ATTX Project',
     author_email='stefan.negru@helsinki.fi',
