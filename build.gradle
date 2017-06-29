@@ -3,11 +3,11 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath group: 'com.linkedin.pygradle', name: 'pygradle-plugin', version: '0.6.1'
+        classpath group: 'com.linkedin.pygradle', name: 'pygradle-plugin', version: '0.6.3'
     }
 }
 
-apply plugin: 'com.linkedin.python-web-app'
+apply plugin: 'com.linkedin.python-cli'
 
 version = "1.0"
 
@@ -16,6 +16,7 @@ python {
 }
 
 dependencies {
+    python 'pypi:pbr:1.8.0'
     python 'pypi:jsonschema:2.6.0'
     python 'pypi:falcon:1.2.0'
     python 'pypi:requests:2.18.1'
@@ -25,6 +26,8 @@ dependencies {
     python 'pypi:prov:1.5.0'
     python 'pypi:PyLD:0.7.2'
     python 'pypi:gunicorn:19.7.1'
+    python 'pypi:python-mimeparse:1.6.0'
+    python 'pypi:click:6.7'
     test 'pypi:httpretty:0.8.14'
 }
 
