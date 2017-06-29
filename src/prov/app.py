@@ -1,7 +1,7 @@
 import falcon
 from prov.utils.logs import app_logger
-from prov.applib.healthcheck import HealthCheck
-from prov.applib.provenance import ConstructProvenance, RetrieveProvenance
+from prov.api.healthcheck import HealthCheck
+from prov.api.provenance import ConstructProvenance, RetrieveProvenance
 
 api_version = "0.1"  # TO DO: Figure out a better way to do versioning
 

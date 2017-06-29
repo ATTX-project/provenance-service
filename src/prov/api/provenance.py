@@ -34,7 +34,7 @@ class ConstructProvenance(object):
 class RetrieveProvenance(object):
     """Update Provenance on request."""
 
-    def on_post(self, req, resp):
+    def on_get(self, req, resp):
         """Respond on GET request to map endpoint."""
         # modifiedSince = req.get_param('modifiedSince')
         # start = req.get_param_as_bool('start')
