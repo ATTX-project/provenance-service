@@ -1,0 +1,235 @@
+---
+swagger: "2.0"
+info:
+  description: "ATTX GM internal API for orchestrating services and retrieving information from the Graph Store."
+  version: "0.1"
+  title: "ATTX GM API"
+  contact:
+    name: "ATTX project"
+    url: "https://www.helsinki.fi/en/projects/attx-2016"
+  license:
+    name: "MIT"
+basePath: "/"
+tags:
+- name: "ProvService"
+  description: "Provenance service core functionalities"
+  externalDocs:
+    description: "just use it"
+    url: "https://attx-project.github.io/"
+- name: "ProvGraph"
+  description: "Graph interface for Provenance Service"
+  externalDocs:
+    description: "just use it"
+    url: "https://attx-project.github.io/"
+schemes:
+- "http"
+paths:
+  /health:
+    get:
+      description: "Get health of GM-API."
+      responses:
+        200:
+          description: "Successful response."
+  /{apiversion}/prov:
+    post:
+      tags:
+      - "ProvService"
+      description: "Updates the Graph Store with provenance data."
+      produces:
+      - "application/json"
+      parameters:
+      - name: apiversion
+        in: path
+        required: true
+        type: "integer"
+      - in: "body"
+        name: "prov request"
+        required: true
+        schema:
+          $ref: "#/definitions/Prov"
+      responses:
+        202:
+          description: "Accepted."
+          schema:
+            $ref: "#/definitions/ProvStatus"
+        400:
+          description: "Invalid Input."
+  /{apiversion}/prov/show/{entityID}:
+    get:
+      tags:
+      - "ProvService"
+      description: "Get list of Graphs."
+      produces:
+      - "application/json"
+      parameters:
+      - name: apiversion
+        in: path
+        required: true
+        type: "integer"
+      - name: "entityID"
+        in: "path"
+        description: "Fetch Provenance related information for an entity"
+        required: true
+        type: "integer"
+        format: "int64"
+      responses:
+        200:
+          description: "Successful response."
+        410:
+          description: "No Provenace information for entity available."
+  /{apiversion}/graph/query:
+    post:
+      tags:
+      - "ProvGraph"
+      operationId: "graph_query"
+      description: "Send a SPARQL query to the Graph Store"
+      parameters:
+      - name: apiversion
+        in: path
+        required: true
+        type: "integer"
+      - in: "body"
+        name: "linking"
+        required: true
+        schema:
+          $ref: "#/definitions/Query"
+      responses:
+        202:
+          description: "Accepted."
+        400:
+          description: "Invalid Input."
+  /{apiversion}/graph/update:
+    post:
+      tags:
+      - "ProvGraph"
+      operationId: "graph_update"
+      description: "Send an update query to the Graph Store."
+      parameters:
+      - name: apiversion
+        in: path
+        required: true
+        type: "integer"
+      - in: "body"
+        name: "linking"
+        required: true
+        schema:
+          $ref: "#/definitions/Query"
+      responses:
+        202:
+          description: "Accepted."
+        400:
+          description: "Invalid Input."
+  /{apiversion}/graph/list:
+    get:
+      tags:
+      - "ProvGraph"
+      description: "Get list of Graphs."
+      produces:
+      - "application/json"
+      parameters:
+      - name: apiversion
+        in: path
+        required: true
+        type: "integer"
+      responses:
+        200:
+          description: "Successful response."
+          schema:
+            type: "array"
+            items:
+              type: "string"
+        410:
+          description: "No Graphs available."
+  /{apiversion}/graph/statistics:
+    get:
+      tags:
+      - "ProvGraph"
+      description: "Get status of the linking job."
+      produces:
+      - "application/json"
+      parameters:
+      - name: apiversion
+        in: path
+        required: true
+        type: "integer"
+      responses:
+        200:
+          description: "Successful response."
+          schema:
+            type: "object"
+        410:
+          description: "Statistics Unavailable."
+  /{apiversion}/graph/{graphID}:
+    get:
+      tags:
+      - "ProvGraph"
+      description: "Get status of the linking job."
+      produces:
+      - "application/json"
+      parameters:
+      - name: apiversion
+        in: path
+        required: true
+        type: "integer"
+      - name: "graphID"
+        in: "path"
+        description: "Fetch graph with a specific ID."
+        required: true
+        type: "integer"
+        format: "int64"
+      responses:
+        200:
+          description: "Successful response."
+          schema:
+            type: "object"
+        410:
+          description: "Graph does not exist."
+    delete:
+      tags:
+      - "ProvGraph"
+      description: "Delete graph with a certain ID."
+      parameters:
+      - name: "graphID"
+        in: "path"
+        description: "Fetch graph with a specific ID."
+        required: true
+        type: "integer"
+        format: "int64"
+      responses:
+        200:
+          description: "OK"
+definitions:
+  Prov:
+    required:
+    - "id"
+    - "type"
+    properties:
+      id:
+        type: "integer"
+        format: "int64"
+      type:
+        type: "string"
+      properties:
+        type: "object"
+        properties: {}
+  ProvStatus:
+    required:
+    - "id"
+    - "status"
+    properties:
+      id:
+        type: "integer"
+        format: "int64"
+      status:
+        type: "string"
+  Query:
+    required:
+    - "graphStore"
+    - "query"
+    properties:
+      graphStore:
+        type: "object"
+        properties: {}
+      query:
+        type: "object"
+        properties: {}
