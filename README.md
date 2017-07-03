@@ -13,7 +13,3 @@
 After all the requirements are satisfied in the root directory run `gradle build`
 
 ### Running the application
-
-To use the deployable artifact after build run `./build/deployable/bin/gunicorn prov.webapi:provservice`
-
-To deploy the artifact on your a server unzip `build/distributions/provenance-service-1.0.tar.gz` on one's server and run using `./gunicorn webapp.webapi:webapp` (the options for gunicorn can be added to command such as port number `./build/deployable/bin/gunicorn prov.webapi:provservice -b 127.0.0.1:4300` )

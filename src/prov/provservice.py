@@ -7,7 +7,7 @@ from gunicorn.six import iteritems
 
 @click.command()
 @click.option('--host', default='127.0.0.1', help='provservice host.')
-@click.option('--port', default=4302, help='provservice server port.')
+@click.option('--port', default=6030, help='provservice server port.')
 @click.option('--workers', default=2, help='provservice server workers.')
 @click.option('--log', default='logs/server.log', help='log file for app.')
 def cli(host, port, log, workers):

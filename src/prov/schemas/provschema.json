@@ -1,0 +1,100 @@
+{
+    "definitions": {},
+    "properties": {
+        "activity": {
+            "properties": {
+                "executedSuccessful": {
+                    "type": "boolean"
+                },
+                "prov:enededAtTime": {
+                    "type": "string"
+                },
+                "prov:generated": {
+                    "type": "string"
+                },
+                "prov:startedAtTime": {
+                    "type": "string"
+                },
+                "prov:used": {
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "agent": {
+            "properties": {
+                "dcterms:source": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "prov:hadRole": {
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "id": {
+            "properties": {
+                "activityID": {
+                    "type": "integer"
+                },
+                "agentID": {
+                    "type": "string"
+                },
+                "workflowID": {
+                    "type": "integer"
+                }
+            },
+            "required": [
+                "activityID",
+                "agentID",
+                "workflowID"
+            ],
+            "type": "object"
+        },
+        "workflow": {
+            "properties": {
+                "dcterms:description": {
+                    "type": "string"
+                },
+                "dcterms:title": {
+                    "type": "string"
+                },
+                "private": {
+                    "type": "boolean"
+                },
+                "steps": {
+                    "items": {
+                        "properties": {
+                            "dcterms:description": {
+                                "type": "string"
+                            },
+                            "dcterms:title": {
+                                "type": "string"
+                            },
+                            "isFirstStep": {
+                                "type": "boolean"
+                            },
+                            "pwo:hasNextStep": {
+                                "type": "integer"
+                            },
+                            "stepID": {
+                                "type": "integer"
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "type": "array"
+                }
+            },
+            "type": "object"
+        }
+    },
+    "required": [
+        "id",
+        "agent",
+    ],
+    "type": "object"
+}
