@@ -1,5 +1,4 @@
 {
-    "definitions": {},
     "properties": {
         "activity": {
             "properties": {
@@ -7,13 +6,15 @@
                     "type": "boolean"
                 },
                 "prov:enededAtTime": {
-                    "type": "string"
+                    "type": "string",
+                    "format": "date-time"
                 },
                 "prov:generated": {
                     "type": "string"
                 },
                 "prov:startedAtTime": {
-                    "type": "string"
+                    "type": "string",
+                    "format": "date-time"
                 },
                 "prov:used": {
                     "type": "string"
@@ -47,11 +48,6 @@
                     "type": "integer"
                 }
             },
-            "required": [
-                "activityID",
-                "agentID",
-                "workflowID"
-            ],
             "type": "object"
         },
         "workflow": {
@@ -92,9 +88,9 @@
             "type": "object"
         }
     },
+    "type": "object",
     "required": [
         "id",
-        "agent",
-    ],
-    "type": "object"
+        "agent"
+    ]
 }
