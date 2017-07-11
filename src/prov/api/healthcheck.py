@@ -7,16 +7,23 @@ from prov.utils.graph_store import GraphStore
 # For now the endpoint responds with a simple 200
 
 
+def healthcheck_response(api_status, graph_health):
+    """Content and format health status response."""
+    health_status = dict([('provService', api_status)])
+    if graph_health:
+        health_status['graphStore'] = "Running"
+    else:
+        health_status['graphStore'] = "Not Running"
+    return json.dumps(health_status, indent=1, sort_keys=True)
+
+
 class HealthCheck(object):
     """Create HealthCheck class."""
 
     def on_get(self, req, resp):
         """Respond on GET request to map endpoint."""
         fuseki = GraphStore()
-        if fuseki.health():
-            resp.data = json.dumps("\{\"status\":\"OK\"\}", indent=1, sort_keys=True)
-        else:
-            resp.data = json.dumps("\{\"status\":\"NOT OK\"\}", indent=1, sort_keys=True)
+        resp.data = healthcheck_response("Running", fuseki.graph_health())
         resp.content_type = 'application/json'
-        resp.status = falcon.HTTP_200  # implement 202 when it is needed
+        resp.status = falcon.HTTP_200
         app_logger.info('Finished operations on /health GET Request.')

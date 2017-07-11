@@ -1,7 +1,7 @@
 import click
 import multiprocessing
 import gunicorn.app.base
-from prov.app import create
+from prov.app import init_api
 from gunicorn.six import iteritems
 
 
@@ -18,7 +18,7 @@ def cli(host, port, log, workers):
         'daemon': 'True',
         'errorlog': log
     }
-    PROVService(create(), options).run()
+    PROVService(init_api(), options).run()
 
 
 class PROVService(gunicorn.app.base.BaseApplication):
