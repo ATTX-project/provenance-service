@@ -1,7 +1,7 @@
 ---
 swagger: "2.0"
 info:
-  description: "ATTX GM internal API for orchestrating services and retrieving information from the Graph Store."
+  description: "ATTX Provenance Service for constructing and retrieving data provenance."
   version: "0.1"
   title: "ATTX GM API"
   contact:
@@ -26,7 +26,7 @@ schemes:
 paths:
   /health:
     get:
-      description: "Get health of GM-API."
+      description: "Get health of Provenance Service."
       responses:
         200:
           description: "Successful response."
@@ -34,7 +34,7 @@ paths:
     post:
       tags:
       - "ProvService"
-      description: "Updates the Graph Store with provenance data."
+      description: "Construct Provenance based on request."
       produces:
       - "application/json"
       parameters:
@@ -58,7 +58,7 @@ paths:
     get:
       tags:
       - "ProvService"
-      description: "Get list of Graphs."
+      description: "Show a specific Provenance based on Activity ID."
       produces:
       - "application/json"
       parameters:
@@ -135,16 +135,14 @@ paths:
         200:
           description: "Successful response."
           schema:
-            type: "array"
-            items:
-              type: "string"
+            type: "object"
         410:
           description: "No Graphs available."
   /{apiversion}/graph/statistics:
     get:
       tags:
       - "ProvGraph"
-      description: "Get status of the linking job."
+      description: "Get statistics related to the Dataset."
       produces:
       - "application/json"
       parameters:
@@ -159,11 +157,11 @@ paths:
             type: "object"
         410:
           description: "Statistics Unavailable."
-  /{apiversion}/graph/{graphID}:
+  /{apiversion}/graph:
     get:
       tags:
       - "ProvGraph"
-      description: "Get status of the linking job."
+      description: "Get a named graph triples."
       produces:
       - "application/json"
       parameters:
@@ -171,11 +169,11 @@ paths:
         in: path
         required: true
         type: "integer"
-      - name: "graphID"
-        in: "path"
-        description: "Fetch graph with a specific ID."
+      - name: "uri"
+        in: "query"
+        description: "The named graph ID; must be a URI."
         required: true
-        type: "integer"
+        type: "string"
         format: "int64"
       responses:
         200:
@@ -189,11 +187,11 @@ paths:
       - "ProvGraph"
       description: "Delete graph with a certain ID."
       parameters:
-      - name: "graphID"
-        in: "path"
-        description: "Fetch graph with a specific ID."
+      - name: "uri"
+        in: "query"
+        description: "The named graph ID; must be a URI."
         required: true
-        type: "integer"
+        type: "string"
         format: "int64"
       responses:
         200:
@@ -224,12 +222,10 @@ definitions:
         type: "string"
   Query:
     required:
-    - "graphStore"
+    - "namedGraph"
     - "query"
     properties:
-      graphStore:
-        type: "object"
-        properties: {}
+      namedGraph:
+        type: "string"
       query:
-        type: "object"
-        properties: {}
+        type: "string"
