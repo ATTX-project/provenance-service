@@ -73,7 +73,7 @@ class GraphStore(object):
         return result
 
     def retrieve_graph(self, named_graph):
-        """Drop named Graph from Graph Store."""
+        """Retrieve named graph from Graph Store."""
         try:
             request = requests.get("{0}data?graph={1}".format(self.request_address, named_graph))
         except Exception as error:
@@ -87,8 +87,32 @@ class GraphStore(object):
             app_logger.info('Retrived named graph: {0} does not exist.'.format(named_graph))
             return None
 
+    def graph_sparql(self, named_graph, query):
+        """Execute SPARQL query on the Graph Store."""
+        headers = {'content-type': "application/x-www-form-urlencoded",
+                   'cache-control': "no-cache"}
+        try:
+            request = requests.post("{0}data?graph={1}".format(self.request_address, named_graph), data=query, headers=headers)
+        except Exception as error:
+            app_logger.error('Something is wrong: {0}'.format(error))
+            raise error
+        app_logger.info('Updated named graph: {0}.'.format(named_graph))
+        return request.text
+
+    def graph_update(self, named_graph, query):
+        """Update named graph in Graph Store."""
+        headers = {'content-type': "application/x-www-form-urlencoded",
+                   'cache-control': "no-cache"}
+        try:
+            request = requests.post("{0}data?graph={1}".format(self.request_address, named_graph), data=query, headers=headers)
+        except Exception as error:
+            app_logger.error('Something is wrong: {0}'.format(error))
+            raise error
+        app_logger.info('Updated named graph: {0}.'.format(named_graph))
+        return request.text
+
     def drop_graph(self, named_graph):
-        """Drop named Graph from Graph Store."""
+        """Drop named graph from Graph Store."""
         drop_query = quote(" DROP GRAPH <{0}>".format(named_graph))
         payload = "update={0}".format(drop_query)
         headers = {'content-type': "application/x-www-form-urlencoded",
