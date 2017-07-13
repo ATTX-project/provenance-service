@@ -1,0 +1,15 @@
+{
+    "properties": {
+        "namedGraph": {
+            "type": "string"
+        },
+        "query": {
+            "type": "string"
+        }
+    },
+    "required": [
+        "query",
+        "namedGraph"
+    ],
+    "type": "object"
+}

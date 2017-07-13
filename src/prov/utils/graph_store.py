@@ -2,6 +2,7 @@ import requests
 import os
 from urllib import quote
 from prov.utils.logs import app_logger
+from SPARQLWrapper import SPARQLWrapper
 
 
 class GraphStore(object):
@@ -89,19 +90,22 @@ class GraphStore(object):
 
     def graph_sparql(self, named_graph, query):
         """Execute SPARQL query on the Graph Store."""
-        headers = {'content-type': "application/x-www-form-urlencoded",
-                   'cache-control': "no-cache"}
+        store_api = "{0}query".format(self.request_address)
         try:
-            request = requests.post("{0}data?graph={1}".format(self.request_address, named_graph), data=query, headers=headers)
+            sparql = SPARQLWrapper(store_api)
+            # add a default graph, though that can also be in the query string
+            sparql.addDefaultGraph(named_graph)
+            sparql.setQuery(query)
+            data = sparql.query().convert()
         except Exception as error:
             app_logger.error('Something is wrong: {0}'.format(error))
             raise error
-        app_logger.info('Updated named graph: {0}.'.format(named_graph))
-        return request.text
+        app_logger.info('Execture SPARQL query on named graph: {0}.'.format(named_graph))
+        return data.toxml()
 
     def graph_update(self, named_graph, query):
         """Update named graph in Graph Store."""
-        headers = {'content-type': "application/x-www-form-urlencoded",
+        headers = {'content-type': "text/turtle",
                    'cache-control': "no-cache"}
         try:
             request = requests.post("{0}data?graph={1}".format(self.request_address, named_graph), data=query, headers=headers)
@@ -109,7 +113,7 @@ class GraphStore(object):
             app_logger.error('Something is wrong: {0}'.format(error))
             raise error
         app_logger.info('Updated named graph: {0}.'.format(named_graph))
-        return request.text
+        return request.json()
 
     def drop_graph(self, named_graph):
         """Drop named graph from Graph Store."""
