@@ -94,7 +94,7 @@ paths:
         schema:
           $ref: "#/definitions/Query"
       responses:
-        202:
+        200:
           description: "Accepted."
         400:
           description: "Invalid Input."
@@ -113,9 +113,9 @@ paths:
         name: "linking"
         required: true
         schema:
-          $ref: "#/definitions/Query"
+          $ref: "#/definitions/Update"
       responses:
-        202:
+        200:
           description: "Accepted."
         400:
           description: "Invalid Input."
@@ -228,4 +228,13 @@ definitions:
       namedGraph:
         type: "string"
       query:
+        type: "string"
+  Update:
+    required:
+    - "namedGraph"
+    - "triples"
+    properties:
+      namedGraph:
+        type: "string"
+      triples:
         type: "string"

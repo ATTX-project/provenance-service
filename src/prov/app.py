@@ -22,7 +22,7 @@ def init_api():
     provservice.add_route('/%s/graph/statistics' % (api_version), GraphStatistics())
     provservice.add_route('/%s/graph' % (api_version), GraphResource())
 
-    app_logger.info('App is running.')
+    app_logger.info('ProvService is running.')
     return provservice
 
 
