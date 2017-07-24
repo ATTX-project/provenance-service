@@ -3,7 +3,7 @@ swagger: "2.0"
 info:
   description: "ATTX Provenance Service for constructing and retrieving data provenance."
   version: "0.1"
-  title: "ATTX GM API"
+  title: "ATTX Provenance Service"
   contact:
     name: "ATTX project"
     url: "https://www.helsinki.fi/en/projects/attx-2016"
