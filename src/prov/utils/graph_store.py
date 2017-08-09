@@ -103,12 +103,12 @@ class GraphStore(object):
         app_logger.info('Execture SPARQL query on named graph: {0}.'.format(named_graph))
         return data.toxml()
 
-    def graph_update(self, named_graph, query):
+    def graph_update(self, named_graph, data):
         """Update named graph in Graph Store."""
         headers = {'content-type': "text/turtle",
                    'cache-control': "no-cache"}
         try:
-            request = requests.post("{0}data?graph={1}".format(self.request_address, named_graph), data=query, headers=headers)
+            request = requests.post("{0}data?graph={1}".format(self.request_address, named_graph), data=data, headers=headers)
         except Exception as error:
             app_logger.error('Something is wrong: {0}'.format(error))
             raise error

@@ -1,96 +1,99 @@
 {
     "properties": {
-        "activity": {
-            "properties": {
-                "executedSuccessful": {
-                    "type": "boolean"
-                },
-                "prov:enededAtTime": {
-                    "type": "string",
-                    "format": "date-time"
-                },
-                "prov:generated": {
-                    "type": "string"
-                },
-                "prov:startedAtTime": {
-                    "type": "string",
-                    "format": "date-time"
-                },
-                "prov:used": {
-                    "type": "string"
-                }
-            },
+        "payload": {
+            "properties": {},
             "type": "object"
         },
-        "agent": {
+        "provenance": {
             "properties": {
-                "dcterms:source": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "prov:hadRole": {
-                    "type": "string"
-                }
-            },
-            "type": "object"
-        },
-        "id": {
-            "properties": {
-                "activityID": {
-                    "type": "integer"
-                },
-                "agentID": {
-                    "type": "string"
-                },
-                "workflowID": {
-                    "type": "integer"
-                }
-            },
-            "type": "object"
-        },
-        "workflow": {
-            "properties": {
-                "dcterms:description": {
-                    "type": "string"
-                },
-                "dcterms:title": {
-                    "type": "string"
-                },
-                "private": {
-                    "type": "boolean"
-                },
-                "steps": {
-                    "items": {
-                        "properties": {
-                            "dcterms:description": {
-                                "type": "string"
+                "activity": {
+                    "properties": {
+                        "communication": {
+                            "items": {
+                                "properties": {
+                                    "input": {
+                                        "type": "object"
+                                    },
+                                    "role": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "role"
+                                ],
+                                "type": "object"
                             },
-                            "dcterms:title": {
-                                "type": "string"
-                            },
-                            "isFirstStep": {
-                                "type": "boolean"
-                            },
-                            "pwo:hasNextStep": {
-                                "type": "integer"
-                            },
-                            "stepID": {
-                                "type": "integer"
-                            }
+                            "type": "array"
                         },
-                        "type": "object"
+                        "description": {
+                            "type": "string"
+                        },
+                        "endTime": {
+                            "type": "string"
+                        },
+                        "startTime": {
+                            "type": "string"
+                        },
+                        "status": {
+                            "type": "string"
+                        },
+                        "title": {
+                            "type": "string"
+                        },
+                        "type": {
+                            "type": "string"
+                        }
                     },
-                    "type": "array"
+                    "type": "object"
+                },
+                "agent": {
+                    "properties": {
+                        "ID": {
+                            "type": "string"
+                        },
+                        "role": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "role",
+                        "ID"
+                    ],
+                    "type": "object"
+                },
+                "context": {
+                    "properties": {
+                        "activityID": {
+                            "type": "integer"
+                        },
+                        "stepID": {
+                            "type": "integer"
+                        },
+                        "workflowID": {
+                            "type": "integer"
+                        }
+                    },
+                    "required": [
+                        "workflowID",
+                        "stepID",
+                        "activityID"
+                    ],
+                    "type": "object"
+                },
+                "input": {
+                    "type": "object"
+                },
+                "output": {
+
+                    "type": "object"
                 }
             },
             "type": "object"
         }
     },
-    "type": "object",
     "required": [
-        "id",
-        "agent"
-    ]
+        "provenance",
+        "payload"
+    ],
+    "type": "object"
 }

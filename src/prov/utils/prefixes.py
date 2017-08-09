@@ -1,4 +1,4 @@
-from rdflib import Namespace
+from rdflib import Namespace, URIRef
 from ConfigParser import SafeConfigParser
 
 PROV = Namespace('http://www.w3.org/ns/prov#')
@@ -26,6 +26,11 @@ def bind_prefix(graph):
     graph.bind('sd', 'http://www.w3.org/ns/sparql-service-description#')
 
     return graph
+
+
+def create_URI(namespace, string, connector=''):
+    """Add prefix to a certain string."""
+    return URIRef("{0}{1}{2}".format(namespace, connector, string))
 
 
 # TBD

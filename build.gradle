@@ -3,7 +3,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath group: 'com.linkedin.pygradle', name: 'pygradle-plugin', version: '0.6.3'
+        classpath group: 'com.linkedin.pygradle', name: 'pygradle-plugin', version: '0.6.7'
     }
 }
 
@@ -18,8 +18,9 @@ python {
 dependencies {
     python 'pypi:pbr:1.8.0'
     python 'pypi:jsonschema:2.6.0'
+    // python 'pypi:stomp.py:4.1.18'
     python 'pypi:falcon:1.2.0'
-    python 'pypi:requests:2.18.1'
+    python 'pypi:requests:2.18.3'
     python 'pypi:SPARQLWrapper:1.8.0'
     python 'pypi:rdflib:4.2.2'
     python 'pypi:rdflib-jsonld:0.4.0'
@@ -29,6 +30,7 @@ dependencies {
     python 'pypi:python-mimeparse:1.6.0'
     python 'pypi:click:6.7'
     test 'pypi:httpretty:0.8.14'
+    test 'pypi:responses:0.6.1'
 }
 
 repositories {
