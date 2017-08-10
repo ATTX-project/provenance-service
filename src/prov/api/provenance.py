@@ -1,9 +1,9 @@
-import json
+# import json
 import falcon
 from prov.schemas import load_schema
 from prov.utils.validate import validate
 from prov.utils.logs import app_logger
-# from prov.applib.construct_prov import construct_provenance
+from prov.applib.construct_prov import construct_provenance
 
 
 class ConstructProvenance(object):
@@ -12,9 +12,9 @@ class ConstructProvenance(object):
     @validate(load_schema('provschema'))
     def on_post(self, req, resp, parsed):
         """Respond on GET request to map endpoint."""
-        # response = construct_provenance(parsed)
-        resp.data = json.dumps(parsed, indent=1, sort_keys=True)
-        resp.content_type = 'application/json'
+        response = construct_provenance(parsed["provenance"], parsed["payload"])
+        resp.data = response
+        resp.content_type = 'text/turtle'
         resp.status = falcon.HTTP_200
         app_logger.info('Accepted POST Request for /prov.')
 

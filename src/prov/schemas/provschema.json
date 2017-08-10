@@ -18,9 +18,6 @@
                                         "type": "string"
                                     }
                                 },
-                                "required": [
-                                    "role"
-                                ],
                                 "type": "object"
                             },
                             "type": "array"
@@ -75,7 +72,6 @@
                     },
                     "required": [
                         "workflowID",
-                        "stepID",
                         "activityID"
                     ],
                     "type": "object"
@@ -84,7 +80,6 @@
                     "type": "object"
                 },
                 "output": {
-
                     "type": "object"
                 }
             },

@@ -1,29 +1,34 @@
-# import random
-from rdflib import Graph, BNode, Literal
-# , BNode, URIRef, Literal
+import hashlib
+from rdflib import Graph, BNode, Literal, URIRef
 from rdflib.namespace import RDF, DCTERMS, XSD
-from prov.utils.prefixes import bind_prefix, create_URI, ATTXProv, PROV, ATTXBase
-# ATTXBase, ATTXOnto, PROV, PWO, SD
+from prov.utils.prefixes import bind_prefix, create_URI, ATTXProv, PROV, ATTXBase, ATTXOnto
+# , PWO, SD
 from prov.utils.logs import app_logger
 from prov.utils.graph_store import GraphStore
 
 
-def construct_provenance(provObject, payload=None):
+def construct_provenance(provObject, payload):
     """Parse Provenance Object and construct Provenance Graph."""
     graph = Graph()
     bind_prefix(graph)
     activityID = ''.join(filter(None, ('activity',
-                                provObject['context']['activityID'])))
+                                str(provObject['context']['activityID']))))
     workflowID = ''.join(filter(None, ('workflow',
-                                provObject['context']['workflowID'])))
-    stepID = ''.join(filter(None, ('step',
-                            provObject['context']['stepID'])))
-    agentID = ''.join(filter(None, ('agent',
-                                    provObject['agent']['ID'])))
-    base_id = "_".join(filter(None, (workflowID, activityID, stepID, agentID)))
-    app_logger.info('Constructed base ID: {0}'.format(base_id))
+                                str(provObject['context']['workflowID']))))
+    # if an activity does not include step ID it is an WorkflowExecution
+    if provObject['context'].get('stepID'):
+        stepID = ''.join(filter(None, ('step',
+                                str(provObject['context']['stepID']))))
+    else:
+        stepID = None
+    agentID = str(provObject['agent']['ID'])
+    base_ID = "_".join(filter(None, (workflowID, activityID, stepID, agentID)))
+    workflow_ID = "{0}_{1}".format(workflowID, activityID)
+    app_logger.info('Constructed base ID: {0}'.format(base_ID))
     try:
-        store_provenance(prov_activity(graph, base_id, provObject))
+        prov_graph = prov_activity(graph, base_ID, workflow_ID, provObject, payload)
+        # store_provenance(prov_graph)
+        return prov_graph.serialize(format='turtle')
     except Exception as error:
         app_logger.error('Something is wrong with parsing the provObject: {0}'.format(error))
 
@@ -35,35 +40,118 @@ def store_provenance(graph):
     return storage_request
 
 
-def prov_activity(graph, base_id, provObject):
+def prov_activity(graph, base_ID, workflow_ID, provObject, payload):
     """Construct Activity provenance Graph."""
     activity = provObject['activity']
-    agent = provObject['agent']
-    graph.add((base_id, RDF.type, PROV.Activity))
-    # graph.add((URIRef("{0}activity{1}".format(ATTXBase, activity_id)), RDF.type, ATTXOnto.WorkflowExecution))
-    graph.add((base_id, DCTERMS.title, activity['title']))
-    graph.add((base_id, PROV.startedAtTime, Literal(activity['startTime'], datatype=XSD.dateTime)))
-    graph.add((base_id, PROV.endedAtTime, Literal(activity['endTime'], datatype=XSD.dateTime)))
-    graph.add((base_id, PROV.wasAssociatedWith, create_URI(ATTXBase, agent['ID'])))
-    # information about the agent and the artifact used.
-    graph.add((create_URI(ATTXBase, agent), ATTXOnto.usesArtifact, create_URI(ATTXBase, artifact)))
-    if usedDatasetList is not None:
-        for dataset in usedDatasetList:
-            dataset_provenance(graph, dataset, activity_id, "used")
-    dataset_provenance(graph, str(generatedDataset), activity_id, "generated")
-    app_logger.info('Construct activity metadata for Activity: activity{0}.' .format(activity_id))
+    graph.add((create_URI(ATTXBase, base_ID), RDF.type, PROV.Activity))
+    if activity.get('type'):
+        graph.add((create_URI(ATTXBase, base_ID), RDF.type,
+                   create_URI(ATTXOnto, activity['type'].title())))
+        prov_association(graph, base_ID, provObject, workflow_ID)
+    else:
+        prov_association(graph, base_ID, provObject)
+    if activity.get('title'):
+        graph.add((create_URI(ATTXBase, base_ID), DCTERMS.title, Literal(activity['title'])))
+    if activity.get('description'):
+        graph.add((create_URI(ATTXBase, base_ID), DCTERMS.description, Literal(activity['description'])))
+    if activity.get('communication'):
+        prov_communication(graph, base_ID, provObject)
+    if provObject.get('input'):
+        prov_usage(graph, base_ID, provObject['input'], payload)
+    if provObject.get('output'):
+        prov_generation(graph, base_ID, provObject['output'], payload)
+    app_logger.info('Constructed provenance for Activity with URI: attx:{0}.' .format(base_ID))
     return graph
 
-def prov_association(graph, base_id, provObject):
+
+def prov_time(graph, base_ID, provObject):
+    """Figure out start and end times."""
+    activity = provObject['activity']
+    if activity.get('startTime'):
+        graph.add((create_URI(ATTXBase, base_ID), PROV.startedAtTime, Literal(activity['startTime'], datatype=XSD.dateTime)))
+    if activity.get('endTime'):
+        graph.add((create_URI(ATTXBase, base_ID), PROV.endedAtTime, Literal(activity['endTime'], datatype=XSD.dateTime)))
+    return graph
+
+
+def prov_association(graph, base_ID, provObject, workflow_ID=None):
     """Associate an activity with an Agent."""
     bnode = BNode()
-    graph.add((base_id, PROV.qualifiedAssociation, bnode))
-    graph.add((bnode, RDF.type, PROV.Assocation))
-    graph.add((bnode, PROV.hadPlan, URIRef("{0}workflow{1}".format(ATTXBase, workflow_id))))
-    graph.add((bnode, PROV.agent, create_URI(ATTXBase, agent)))
-    graph.add((create_URI(ATTXBase, agent), RDF.type, PROV.Agent))
+    agent = provObject['agent']
+    agent_URI = create_URI(ATTXBase, agent['ID'])
+
+    graph.add((create_URI(ATTXBase, base_ID), PROV.wasAssociatedWith, agent_URI))
+    graph.add((create_URI(ATTXBase, base_ID), PROV.qualifiedAssociation, bnode))
+    graph.add((bnode, RDF.type, PROV.Association))
+    graph.add((bnode, PROV.agent, agent_URI))
+    graph.add((bnode, PROV.hadRole, create_URI(ATTXBase, agent['role'])))
+    if workflow_ID:
+        graph.add((bnode, PROV.hadPlan, create_URI(ATTXBase, workflow_ID)))
+
+    graph.add((create_URI(ATTXBase, agent['ID']), RDF.type, PROV.Agent))
+    # information about the agent and the artifact used.
+    # graph.add((create_URI(ATTXBase, agent['ID']), ATTXOnto.usesArtifact, create_URI(ATTXBase, artifact)))
     return graph
 
+
+def prov_communication(graph, base_ID, provObject):
+    """Communication of an activity with another activity."""
+    bnode = BNode()
+    communication = provObject['activity']['communication']
+    for activity in communication:
+        key_entity = create_URI(ATTXBase, base_ID, activity['role'])
+        graph.add((create_URI(ATTXBase, base_ID), PROV.qualifiedCommunication, bnode))
+        graph.add((bnode, RDF.type, PROV.Communication))
+        graph.add((bnode, PROV.activity, key_entity))
+        graph.add((bnode, PROV.hadRole, create_URI(ATTXBase, activity['role'])))
+        for key in activity['input']:
+            graph.add((key_entity, RDF.type, PROV.Activity))
+            if activity['input'][key].get('role'):
+                bnode_usage = BNode()
+                communication_entity = URIRef("{0}_{1}".format(key_entity, activity['input'][key]['role']))
+                graph.add((key_entity, PROV.qualifiedUsage, bnode_usage))
+                graph.add((bnode_usage, RDF.type, PROV.Usage))
+                graph.add((bnode_usage, PROV.entity, communication_entity))
+                graph.add((bnode_usage, PROV.hadRole, create_URI(ATTXBase, activity['input'][key]['role'])))
+
+                graph.add((communication_entity, RDF.type, PROV.Entity))
+    return graph
+
+
+def prov_usage(graph, base_ID, inputObject, payload):
+    """Create qualified Usage if possible."""
+    bnode = BNode()
+    for key in inputObject:
+        key_entity = create_URI(ATTXBase, key,
+                                hashlib.md5(payload[key]).hexdigest())
+        graph.add((create_URI(ATTXBase, base_ID), PROV.used, key_entity))
+        if inputObject[key].get('role'):
+            graph.add((create_URI(ATTXBase, base_ID), PROV.qualifiedUsage, bnode))
+            graph.add((bnode, RDF.type, PROV.Usage))
+            graph.add((bnode, PROV.entity, key_entity))
+            graph.add((bnode, PROV.hadRole, create_URI(ATTXBase, inputObject[key]['role'])))
+
+        graph.add((key_entity, RDF.type, PROV.Entity))
+        graph.add((key_entity, DCTERMS.source, Literal(payload[key])))
+    return graph
+
+
+def prov_generation(graph, base_ID, outputObject, payload):
+    """Create qualified Usage if possible."""
+    bnode = BNode()
+    for key in outputObject:
+        key_entity = create_URI(ATTXBase, key,
+                                hashlib.md5(payload[key]).hexdigest())
+        graph.add((create_URI(ATTXBase, base_ID), PROV.generated, key_entity))
+        if outputObject[key].get('role'):
+            graph.add((create_URI(ATTXBase, base_ID), PROV.qualifiedGeneration, bnode))
+            graph.add((bnode, RDF.type, PROV.Generation))
+            graph.add((bnode, PROV.entity, key_entity))
+            graph.add((bnode, PROV.hadRole, create_URI(ATTXBase, outputObject[key]['role'])))
+
+        graph.add((key_entity, RDF.type, PROV.Entity))
+        graph.add((key_entity, DCTERMS.source, Literal(payload[key])))
+    return graph
 
 # def construct_provenance(provObject):
 #     """Construct provenance graph based on request."""
