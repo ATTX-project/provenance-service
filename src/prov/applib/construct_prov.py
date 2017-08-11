@@ -21,14 +21,14 @@ def construct_provenance(prov_Object, payload):
                                 str(prov_Object['context']['stepID']))))
     else:
         stepID = None
-    base_ID = "_".join(filter(None, (workflowID, activityID, stepID)))
-    workflow_ID = "{0}_{1}".format(workflowID, activityID)
-    app_logger.info('Constructed base ID: {0}'.format(base_ID))
+    base_URI = "_".join(filter(None, (workflowID, activityID, stepID)))
+    workflow_base_URI = "{0}_{1}".format(workflowID, activityID)
+    app_logger.info('Constructed base ID: {0}'.format(base_URI))
     try:
         if prov_Object['activity']['type'] == "DescribeStep":
-            prov_graph = prov_dataset(graph, base_ID, prov_Object, payload)
+            prov_graph = prov_dataset(graph, base_URI, prov_Object, payload)
         else:
-            prov_graph = prov_activity(graph, base_ID, workflow_ID, prov_Object, payload)
+            prov_graph = prov_activity(graph, base_URI, workflow_base_URI, prov_Object, payload)
         # store_provenance(prov_graph)
         return prov_graph.serialize(format='turtle')
     except Exception as error:
@@ -42,16 +42,16 @@ def store_provenance(graph):
     return storage_request
 
 
-def prov_activity(graph, base_ID, workflow_ID, prov_Object, payload):
+def prov_activity(graph, base_URI, workflow_base_URI, prov_Object, payload):
     """Construct Activity provenance Graph."""
     activity = prov_Object['activity']
     agent_ID = str(prov_Object['agent']['ID'])
-    activity_URI = create_URI(ATTXBase, base_ID, agent_ID)
+    activity_URI = create_URI(ATTXBase, base_URI, agent_ID)
     graph.add((activity_URI, RDF.type, PROV.Activity))
     if activity.get('type'):
         graph.add((activity_URI, RDF.type,
                    create_URI(ATTXOnto, activity['type'])))
-        prov_association(graph, activity_URI, prov_Object, workflow_ID)
+        prov_association(graph, activity_URI, prov_Object, workflow_base_URI)
     else:
         prov_association(graph, activity_URI, prov_Object)
     if activity.get('title'):
@@ -60,12 +60,12 @@ def prov_activity(graph, base_ID, workflow_ID, prov_Object, payload):
         graph.add((activity_URI, DCTERMS.description, Literal(activity['description'])))
     prov_time(graph, activity_URI, prov_Object)
     if activity.get('communication'):
-        prov_communication(graph, activity_URI, base_ID, prov_Object)
+        prov_communication(graph, activity_URI, workflow_base_URI, base_URI, prov_Object)
     if prov_Object.get('input'):
-        prov_usage(graph, activity_URI, prov_Object['input'], payload)
+        prov_usage(graph, activity_URI, workflow_base_URI, prov_Object['input'], payload)
     if prov_Object.get('output'):
-        prov_generation(graph, activity_URI, prov_Object['output'], payload)
-    app_logger.info('Constructed provenance for Activity with URI: attx:{0}.' .format(base_ID))
+        prov_generation(graph, activity_URI, workflow_base_URI, prov_Object['output'], payload)
+    app_logger.info('Constructed provenance for Activity with URI: attx:{0}.' .format(base_URI))
     return graph
 
 
@@ -79,7 +79,7 @@ def prov_time(graph, activity_URI, prov_Object):
     return graph
 
 
-def prov_association(graph, activity_URI, prov_Object, workflow_ID=None):
+def prov_association(graph, activity_URI, prov_Object, workflow_base_URI=None):
     """Associate an activity with an Agent."""
     bnode = BNode()
     agent = prov_Object['agent']
@@ -91,30 +91,30 @@ def prov_association(graph, activity_URI, prov_Object, workflow_ID=None):
     graph.add((bnode, PROV.agent, agent_URI))
     graph.add((bnode, PROV.hadRole, create_URI(ATTXBase, agent['role'])))
     if prov_Object['activity']['type'] == 'WorkflowExecution':
-        graph.add((bnode, PROV.hadPlan, create_URI(ATTXBase, workflow_ID)))
-    if workflow_ID and prov_Object['context'].get('stepID') and prov_Object['activity']['type'] == 'Step':
-        prov_workflow(graph, activity_URI, workflow_ID)
+        graph.add((bnode, PROV.hadPlan, create_URI(ATTXBase, workflow_base_URI)))
+    if workflow_base_URI and prov_Object['context'].get('stepID') and prov_Object['activity']['type'] == 'Step':
+        prov_workflow(graph, activity_URI, workflow_base_URI)
     # information about the agent and the artifact used.
     graph.add((agent_URI, RDF.type, PROV.Agent))
     graph.add((agent_URI, RDF.type, ATTXOnto.Artifact))
     return graph
 
 
-def prov_workflow(graph, activity_URI, workflow_ID):
+def prov_workflow(graph, activity_URI, workflow_base_URI):
     """Generate provenance related workflow."""
-    workflowURI = create_URI(ATTXBase, workflow_ID)
+    workflowURI = create_URI(ATTXBase, workflow_base_URI)
     graph.add((workflowURI, RDF.type, PROV.Plan))
     graph.add((workflowURI, RDF.type, ATTXOnto.Workflow))
     graph.add((workflowURI, PWO.hasStep, activity_URI))
     return graph
 
 
-def prov_communication(graph, activity_URI, base_ID, prov_Object):
+def prov_communication(graph, activity_URI, workflow_base_URI, base_URI, prov_Object):
     """Communication of an activity with another activity."""
     bnode = BNode()
     communication = prov_Object['activity']['communication']
     for activity in communication:
-        key_entity = create_URI(ATTXBase, base_ID, activity['agent'])
+        key_entity = create_URI(ATTXBase, base_URI, activity['agent'])
         graph.add((activity_URI, PROV.qualifiedCommunication, bnode))
         graph.add((bnode, RDF.type, PROV.Communication))
         graph.add((bnode, PROV.activity, key_entity))
@@ -125,7 +125,7 @@ def prov_communication(graph, activity_URI, base_ID, prov_Object):
             graph.add((key_entity, PROV.used, communication_entity))
             if activity['input'][key].get('role'):
                 bnode_usage = BNode()
-                role_URI = create_URI(ATTXBase, "used_{0}".format(activity['input'][key]['role']), hashlib.md5(str(key)).hexdigest())
+                role_URI = create_URI(ATTXBase, workflow_base_URI, "used_{0}".format(activity['input'][key]['role']))
                 graph.add((key_entity, PROV.qualifiedUsage, bnode_usage))
                 graph.add((bnode_usage, RDF.type, PROV.Usage))
                 graph.add((bnode_usage, PROV.entity, communication_entity))
@@ -135,12 +135,11 @@ def prov_communication(graph, activity_URI, base_ID, prov_Object):
     return graph
 
 
-def prov_usage(graph, activity_URI, input_Object, payload):
+def prov_usage(graph, activity_URI, workflow_base_URI, input_Object, payload):
     """Create qualified Usage if possible."""
     bnode = BNode()
     for key in input_Object:
-        key_entity = create_URI(ATTXBase, "used_{0}".format(key),
-                                hashlib.md5(str(payload[key])).hexdigest())
+        key_entity = create_URI(ATTXBase, workflow_base_URI, "used_{0}".format(key))
         graph.add((activity_URI, PROV.used, key_entity))
         if input_Object[key].get('role'):
             graph.add((activity_URI, PROV.qualifiedUsage, bnode))
@@ -149,83 +148,42 @@ def prov_usage(graph, activity_URI, input_Object, payload):
             graph.add((bnode, PROV.hadRole, create_URI(ATTXBase, input_Object[key]['role'])))
 
         graph.add((key_entity, RDF.type, PROV.Entity))
-        graph.add((key_entity, DCTERMS.source, Literal(str(payload[key]))))
+        if payload.get(key):
+            graph.add((key_entity, DCTERMS.source, Literal(str(payload[key]))))
     return graph
 
 
-def prov_generation(graph, activity_URI, output_Object, payload):
+def prov_generation(graph, activity_URI, workflow_base_URI, output_Object, payload):
     """Create qualified Usage if possible."""
     bnode = BNode()
     for key in output_Object:
-        key_entity = create_URI(ATTXBase, "generated_{0}".format(key),
-                                hashlib.md5(str(payload[key])).hexdigest())
+        key_entity = create_URI(ATTXBase, workflow_base_URI, "generated_{0}".format(key))
         graph.add((activity_URI, PROV.generated, key_entity))
         if output_Object[key].get('role'):
             graph.add((activity_URI, PROV.qualifiedGeneration, bnode))
             graph.add((bnode, RDF.type, PROV.Generation))
             graph.add((bnode, PROV.entity, key_entity))
-            graph.add((bnode, PROV.hadRole, create_URI(ATTXBase, output_Object[key]['role'], hashlib.md5(str(payload[key])).hexdigest())))
+            graph.add((bnode, PROV.hadRole, create_URI(ATTXBase, output_Object[key]['role'])))
 
         graph.add((key_entity, RDF.type, PROV.Entity))
-        graph.add((key_entity, DCTERMS.source, Literal(str(payload[key]))))
+        if payload.get(key):
+            graph.add((key_entity, DCTERMS.source, Literal(str(payload[key]))))
     return graph
 
 
-def prov_dataset(graph, base_ID, prov_Object, payload):
+def prov_dataset(graph, base_URI, workflow_base_URI, prov_Object, payload):
     """Describe dataset provenance."""
     output_Object = prov_Object['output']
     agent_ID = str(prov_Object['agent']['ID'])
-    activity_URI = create_URI(ATTXBase, base_ID, agent_ID)
-    prov_generation(graph, activity_URI, output_Object, payload)
+    activity_URI = create_URI(ATTXBase, base_URI, agent_ID)
+    prov_generation(graph, activity_URI, workflow_base_URI, output_Object, payload)
     for key in output_Object:
-        key_entity = create_URI(ATTXBase, "generated_{0}".format(key),
-                                hashlib.md5(str(payload[key])).hexdigest())
+        key_entity = create_URI(ATTXBase, workflow_base_URI, "generated_{0}".format(key))
         graph.add((key_entity, RDF.type, ATTXOnto.Dataset))
         graph.add((key_entity, RDF.type, PROV.Entity))
-        if type(payload[key]) is dict:
+        if payload.get(key) and type(payload[key]) is dict:
             for value in payload[key]:
                 graph.add((key_entity, create_URI(ATTXBase, value), Literal(str(payload[key][value]))))
+        elif payload.get(key) and type(payload[key]) is str:
+            graph.add((key_entity, DCTERMS.source, Literal(str(payload[key]))))
     return graph
-
-# def dataset_provenance(graph, dataset, activityID, datasetType):
-#     """Generate datasets associated to the provenance."""
-#     graph.add((URIRef(dataset), RDF.type, ATTXOnto.Dataset))
-#     graph.add((URIRef(dataset), RDF.type, SD.Dataset))
-#     if datasetType == "used":
-#         graph.add((URIRef("{0}activity{1}".format(ATTXBase, activityID)), PROV.used, URIRef(dataset)))
-#     elif datasetType == "generated":
-#         graph.add((URIRef("{0}activity{1}".format(ATTXBase, activityID)), PROV.generated, URIRef(dataset)))
-#         graph.add((URIRef(dataset), DC.title, Literal("activity{0} Linking Dataset".format(activityID))))
-#         graph.add((URIRef(dataset), DC.description, Literal("Dataset generated from activity".format(activityID))))
-#         graph.add((URIRef(dataset), DC.publisher, Literal("ATTX HULib")))
-#         # graph.add((URIRef(dataset), DC.source, Literal()))
-#         # graph.add((URIRef(dataset), CC.license, ATTXOnto.CC0))
-#     return graph
-#
-#
-# def workflow_provenance(graph, strategy):
-#     """Generate workflow related provenance."""
-#     workflow_id = "_link_{0}".format(strategy)
-#     # There will be only one type of workflow and steps. Steps might differ in configuration.
-#     graph.add((URIRef("{0}workflow{1}".format(ATTXBase, workflow_id)), RDF.type, ATTXOnto.Workflow))
-#     graph.add((URIRef("{0}workflow{1}".format(ATTXBase, workflow_id)), DC.title, Literal("Linking Workflow")))
-#     graph.add((URIRef("{0}workflow{1}".format(ATTXBase, workflow_id)), DC.description, Literal("Workflow specific to the link GM API endpoint")))
-#     # Add predifined steps for the workflow
-#     generate_step(graph, 1, strategy, "Retrieve {0} parameters".format(strategy),
-# "Retrieve paramters for the linking for the specified strategy.", workflow_id)
-#     generate_step(graph, 2, strategy, "Construct linking graph for {0}".format(strategy), "Generate linking graph based on strategy parameters.", workflow_id)
-#     generate_step(graph, 3, strategy, "Add to graph store", "Add generated linking graph by {0} to the graph store.".format(strategy), workflow_id)
-#     graph.add((URIRef("{0}step{1}_{2}".format(ATTXBase, 1, strategy)), PWO.hasNextStep, URIRef("{0}step{1}_{2}".format(ATTXBase, 2, strategy))))
-#     graph.add((URIRef("{0}step{1}_{2}".format(ATTXBase, 2, strategy)), PWO.hasNextStep, URIRef("{0}step{1}_{2}".format(ATTXBase, 3, strategy))))
-#
-#     app_logger.info('Construct activity metadata for Workflow: workflow{0} + associated steps.' .format(workflow_id))
-#     return graph
-#
-#
-# def generate_step(graph, stepID, strategy, title, description, workflow):
-#     """Generate step details."""
-#     graph.add((URIRef("{0}step{1}_{2}".format(ATTXBase, stepID, strategy)), RDF.type, ATTXOnto.Step))
-#     graph.add((URIRef("{0}step{1}_{2}".format(ATTXBase, stepID, strategy)), DC.title, Literal(title)))
-#     graph.add((URIRef("{0}step{1}_{2}".format(ATTXBase, stepID, strategy)), DC.description, Literal(description)))
-#     graph.add((URIRef("{0}workflow{1}".format(ATTXBase, workflow)), PWO.hasStep, URIRef("{0}step{1}_{2}".format(ATTXBase, stepID, strategy))))
-#     return graph
