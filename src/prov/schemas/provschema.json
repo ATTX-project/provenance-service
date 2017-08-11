@@ -16,6 +16,9 @@
                                     },
                                     "role": {
                                         "type": "string"
+                                    },
+                                    "agent": {
+                                        "type": "string"
                                     }
                                 },
                                 "type": "object"
@@ -61,13 +64,10 @@
                 "context": {
                     "properties": {
                         "activityID": {
-                            "type": "integer"
                         },
                         "stepID": {
-                            "type": "integer"
                         },
                         "workflowID": {
-                            "type": "integer"
                         }
                     },
                     "required": [
