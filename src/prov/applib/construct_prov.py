@@ -25,8 +25,8 @@ def construct_provenance(prov_Object, payload):
     workflow_base_URI = "{0}_{1}".format(workflowID, activityID)
     app_logger.info('Constructed base ID: {0}'.format(base_URI))
     try:
-        if prov_Object['activity']['type'] == "DescribeStep":
-            prov_graph = prov_dataset(graph, base_URI, prov_Object, payload)
+        if prov_Object['activity']['type'] == "DescribeStepExecution":
+            prov_graph = prov_dataset(graph, base_URI, workflow_base_URI, prov_Object, payload)
         else:
             prov_graph = prov_activity(graph, base_URI, workflow_base_URI, prov_Object, payload)
         # store_provenance(prov_graph)
@@ -84,19 +84,22 @@ def prov_association(graph, activity_URI, prov_Object, workflow_base_URI=None):
     bnode = BNode()
     agent = prov_Object['agent']
     agent_URI = create_URI(ATTXBase, agent['ID'])
+    role_URI = create_URI(ATTXBase, agent['role'])
 
     graph.add((activity_URI, PROV.wasAssociatedWith, agent_URI))
     graph.add((activity_URI, PROV.qualifiedAssociation, bnode))
     graph.add((bnode, RDF.type, PROV.Association))
     graph.add((bnode, PROV.agent, agent_URI))
-    graph.add((bnode, PROV.hadRole, create_URI(ATTXBase, agent['role'])))
+    graph.add((bnode, PROV.hadRole, role_URI))
     if prov_Object['activity']['type'] == 'WorkflowExecution':
         graph.add((bnode, PROV.hadPlan, create_URI(ATTXBase, workflow_base_URI)))
-    if workflow_base_URI and prov_Object['context'].get('stepID') and prov_Object['activity']['type'] == 'Step':
+    if workflow_base_URI and prov_Object['context'].get('stepID') and prov_Object['activity']['type'] == 'StepExecution':
         prov_workflow(graph, activity_URI, workflow_base_URI)
     # information about the agent and the artifact used.
     graph.add((agent_URI, RDF.type, PROV.Agent))
     graph.add((agent_URI, RDF.type, ATTXOnto.Artifact))
+    # information about the Role
+    graph.add((role_URI, RDF.type, PROV.Role))
     return graph
 
 
@@ -115,21 +118,31 @@ def prov_communication(graph, activity_URI, workflow_base_URI, base_URI, prov_Ob
     communication = prov_Object['activity']['communication']
     for activity in communication:
         key_entity = create_URI(ATTXBase, base_URI, activity['agent'])
+        sender_role_URI = create_URI(ATTXBase, activity['role'])
+        sender_agent_URI = create_URI(ATTXBase, activity['agent'])
+
         graph.add((activity_URI, PROV.qualifiedCommunication, bnode))
         graph.add((bnode, RDF.type, PROV.Communication))
         graph.add((bnode, PROV.activity, key_entity))
-        graph.add((bnode, PROV.hadRole, create_URI(ATTXBase, activity['role'])))
+        graph.add((bnode, PROV.hadRole, sender_role_URI))
+        # information about the agent and the artifact used.
+        graph.add((key_entity, RDF.type, PROV.Activity))
+        graph.add((key_entity, PROV.wasAssociatedWith, sender_agent_URI))
+        graph.add((sender_agent_URI, RDF.type, PROV.Agent))
+        graph.add((sender_agent_URI, RDF.type, ATTXOnto.Artifact))
+        # information about the Role
+        graph.add((sender_role_URI, RDF.type, PROV.Role))
         for key in activity['input']:
-            graph.add((key_entity, RDF.type, PROV.Activity))
             communication_entity = URIRef("{0}_{1}".format(key_entity, hashlib.md5(str(key)).hexdigest()))
             graph.add((key_entity, PROV.used, communication_entity))
             if activity['input'][key].get('role'):
                 bnode_usage = BNode()
-                role_URI = create_URI(ATTXBase, workflow_base_URI, "used_{0}".format(activity['input'][key]['role']))
+                receiver_role_URI = create_URI(ATTXBase, workflow_base_URI, activity['input'][key]['role'])
                 graph.add((key_entity, PROV.qualifiedUsage, bnode_usage))
                 graph.add((bnode_usage, RDF.type, PROV.Usage))
                 graph.add((bnode_usage, PROV.entity, communication_entity))
-                graph.add((bnode_usage, PROV.hadRole, role_URI))
+                graph.add((bnode_usage, PROV.hadRole, receiver_role_URI))
+                graph.add((receiver_role_URI, RDF.type, PROV.Role))
 
             # graph.add((communication_entity, RDF.type, PROV.Entity))
     return graph
@@ -139,13 +152,15 @@ def prov_usage(graph, activity_URI, workflow_base_URI, input_Object, payload):
     """Create qualified Usage if possible."""
     bnode = BNode()
     for key in input_Object:
-        key_entity = create_URI(ATTXBase, workflow_base_URI, "used_{0}".format(key))
+        key_entity = create_URI(ATTXBase, workflow_base_URI, key)
         graph.add((activity_URI, PROV.used, key_entity))
         if input_Object[key].get('role'):
+            role_URI = create_URI(ATTXBase, input_Object[key]['role'])
             graph.add((activity_URI, PROV.qualifiedUsage, bnode))
             graph.add((bnode, RDF.type, PROV.Usage))
             graph.add((bnode, PROV.entity, key_entity))
-            graph.add((bnode, PROV.hadRole, create_URI(ATTXBase, input_Object[key]['role'])))
+            graph.add((bnode, PROV.hadRole, role_URI))
+            graph.add((role_URI, RDF.type, PROV.Role))
 
         graph.add((key_entity, RDF.type, PROV.Entity))
         if payload.get(key):
@@ -157,13 +172,15 @@ def prov_generation(graph, activity_URI, workflow_base_URI, output_Object, paylo
     """Create qualified Usage if possible."""
     bnode = BNode()
     for key in output_Object:
-        key_entity = create_URI(ATTXBase, workflow_base_URI, "generated_{0}".format(key))
+        key_entity = create_URI(ATTXBase, workflow_base_URI, key)
         graph.add((activity_URI, PROV.generated, key_entity))
         if output_Object[key].get('role'):
+            role_URI = create_URI(ATTXBase, output_Object[key]['role'])
             graph.add((activity_URI, PROV.qualifiedGeneration, bnode))
             graph.add((bnode, RDF.type, PROV.Generation))
             graph.add((bnode, PROV.entity, key_entity))
-            graph.add((bnode, PROV.hadRole, create_URI(ATTXBase, output_Object[key]['role'])))
+            graph.add((bnode, PROV.hadRole, role_URI))
+            graph.add((role_URI, RDF.type, PROV.Role))
 
         graph.add((key_entity, RDF.type, PROV.Entity))
         if payload.get(key):
@@ -178,10 +195,11 @@ def prov_dataset(graph, base_URI, workflow_base_URI, prov_Object, payload):
     activity_URI = create_URI(ATTXBase, base_URI, agent_ID)
     prov_generation(graph, activity_URI, workflow_base_URI, output_Object, payload)
     for key in output_Object:
-        key_entity = create_URI(ATTXBase, workflow_base_URI, "generated_{0}".format(key))
+        key_entity = create_URI(ATTXBase, workflow_base_URI, key)
         graph.add((key_entity, RDF.type, ATTXOnto.Dataset))
         graph.add((key_entity, RDF.type, PROV.Entity))
         if payload.get(key) and type(payload[key]) is dict:
+            graph.add((key_entity, DCTERMS.source, Literal(str(payload[key]))))
             for value in payload[key]:
                 graph.add((key_entity, create_URI(ATTXBase, value), Literal(str(payload[key][value]))))
         elif payload.get(key) and type(payload[key]) is str:
