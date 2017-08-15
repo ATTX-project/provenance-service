@@ -2,7 +2,6 @@ import hashlib
 from rdflib import Graph, BNode, Literal, URIRef
 from rdflib.namespace import RDF, DCTERMS, XSD
 from prov.utils.prefixes import bind_prefix, create_URI, ATTXProv, PROV, ATTXBase, ATTXOnto, PWO
-#  , SD
 from prov.utils.logs import app_logger
 from prov.utils.graph_store import GraphStore
 
@@ -81,18 +80,18 @@ def prov_time(graph, activity_URI, prov_Object):
 
 def prov_association(graph, activity_URI, prov_Object, workflow_base_URI=None):
     """Associate an activity with an Agent."""
-    bnode = BNode()
     agent = prov_Object['agent']
     agent_URI = create_URI(ATTXBase, agent['ID'])
     role_URI = create_URI(ATTXBase, agent['role'])
+    association_URI = create_URI(ATTXBase, "association", hashlib.md5(str(agent_URI + role_URI + prov_Object['activity']['type'])).hexdigest())
 
     graph.add((activity_URI, PROV.wasAssociatedWith, agent_URI))
-    graph.add((activity_URI, PROV.qualifiedAssociation, bnode))
-    graph.add((bnode, RDF.type, PROV.Association))
-    graph.add((bnode, PROV.agent, agent_URI))
-    graph.add((bnode, PROV.hadRole, role_URI))
+    graph.add((activity_URI, PROV.qualifiedAssociation, association_URI))
+    graph.add((association_URI, RDF.type, PROV.Association))
+    graph.add((association_URI, PROV.agent, agent_URI))
+    graph.add((association_URI, PROV.hadRole, role_URI))
     if prov_Object['activity']['type'] == 'WorkflowExecution':
-        graph.add((bnode, PROV.hadPlan, create_URI(ATTXBase, workflow_base_URI)))
+        graph.add((association_URI, PROV.hadPlan, create_URI(ATTXBase, workflow_base_URI)))
     if workflow_base_URI and prov_Object['context'].get('stepID') and prov_Object['activity']['type'] == 'StepExecution':
         prov_workflow(graph, activity_URI, workflow_base_URI)
     # information about the agent and the artifact used.
@@ -150,16 +149,17 @@ def prov_communication(graph, activity_URI, workflow_base_URI, base_URI, prov_Ob
 
 def prov_usage(graph, activity_URI, workflow_base_URI, input_Object, payload):
     """Create qualified Usage if possible."""
-    bnode = BNode()
+    # bnode = BNode()
     for key in input_Object:
         key_entity = create_URI(ATTXBase, workflow_base_URI, key)
         graph.add((activity_URI, PROV.used, key_entity))
         if input_Object[key].get('role'):
             role_URI = create_URI(ATTXBase, input_Object[key]['role'])
-            graph.add((activity_URI, PROV.qualifiedUsage, bnode))
-            graph.add((bnode, RDF.type, PROV.Usage))
-            graph.add((bnode, PROV.entity, key_entity))
-            graph.add((bnode, PROV.hadRole, role_URI))
+            usage_URI = create_URI(ATTXBase, "used", hashlib.md5(str(key + role_URI)).hexdigest())
+            graph.add((activity_URI, PROV.qualifiedUsage, usage_URI))
+            graph.add((usage_URI, RDF.type, PROV.Usage))
+            graph.add((usage_URI, PROV.entity, key_entity))
+            graph.add((usage_URI, PROV.hadRole, role_URI))
             graph.add((role_URI, RDF.type, PROV.Role))
 
         graph.add((key_entity, RDF.type, PROV.Entity))
@@ -170,16 +170,17 @@ def prov_usage(graph, activity_URI, workflow_base_URI, input_Object, payload):
 
 def prov_generation(graph, activity_URI, workflow_base_URI, output_Object, payload):
     """Create qualified Usage if possible."""
-    bnode = BNode()
+    # bnode = BNode()
     for key in output_Object:
         key_entity = create_URI(ATTXBase, workflow_base_URI, key)
         graph.add((activity_URI, PROV.generated, key_entity))
         if output_Object[key].get('role'):
             role_URI = create_URI(ATTXBase, output_Object[key]['role'])
-            graph.add((activity_URI, PROV.qualifiedGeneration, bnode))
-            graph.add((bnode, RDF.type, PROV.Generation))
-            graph.add((bnode, PROV.entity, key_entity))
-            graph.add((bnode, PROV.hadRole, role_URI))
+            generation_URI = create_URI(ATTXBase, "generated", hashlib.md5(str(key + role_URI)).hexdigest())
+            graph.add((activity_URI, PROV.qualifiedGeneration, generation_URI))
+            graph.add((generation_URI, RDF.type, PROV.Generation))
+            graph.add((generation_URI, PROV.entity, key_entity))
+            graph.add((generation_URI, PROV.hadRole, role_URI))
             graph.add((role_URI, RDF.type, PROV.Role))
 
         graph.add((key_entity, RDF.type, PROV.Entity))
