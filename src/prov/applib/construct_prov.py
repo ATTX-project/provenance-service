@@ -4,8 +4,12 @@ from rdflib.namespace import RDF, DCTERMS, XSD
 from prov.utils.prefixes import bind_prefix, create_URI, ATTXProv, PROV, ATTXBase, ATTXOnto, PWO
 from prov.utils.logs import app_logger
 from prov.utils.graph_store import GraphStore
+from prov.utils.queue import init_celery
+
+app = init_celery('localhost')
 
 
+@app.task
 def construct_provenance(prov_Object, payload):
     """Parse Provenance Object and construct Provenance Graph."""
     graph = Graph()
