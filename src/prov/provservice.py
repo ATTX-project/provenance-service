@@ -7,7 +7,7 @@ from celery.bin import worker
 from gunicorn.six import iteritems
 
 
-@click.group(chain=True)
+@click.group()
 def cli():
     """Run cli tool."""
     pass

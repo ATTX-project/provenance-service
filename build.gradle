@@ -57,6 +57,8 @@ dependencies {
     // python 'pypi:stompest:2.3.0'
     // python 'pypi:stompest.async:2.3.0'
     // python 'pypi:Twisted:17.5.0'
+    // python 'pypi:SQLAlchemy:1.1.13'
+    // python 'pypi:pylibmc:1.5.2'
     python 'pypi:celery:4.1.0'
     python 'pypi:pika:0.10.0'
     python 'pypi:falcon:1.2.0'

@@ -13,7 +13,9 @@ class ConstructProvenance(object):
     def on_post(self, req, resp, parsed):
         """Respond on GET request to map endpoint."""
         response = construct_provenance.delay(parsed["provenance"], parsed["payload"])
-        result = {'task_id': response.result}
+        result = {'task_id': response.id}
+        print response.result
+        print response.status
         resp.body = json.dumps(result)
         resp.status = falcon.HTTP_200
         app_logger.info('Accepted POST Request for /prov.')
@@ -26,4 +28,4 @@ class RetrieveProvenance(object):
     def on_get(self, req, resp, provID):
         """Respond on GET request to map endpoint."""
         resp.status = falcon.HTTP_200
-        app_logger.info('Finished operations on /prov GET Request.')
+        app_logger.info('Finished operations on /prov/{0} GET Request.'.format(provID))

@@ -9,7 +9,7 @@ from prov.utils.queue import init_celery
 app = init_celery('localhost')
 
 
-@app.task
+@app.task(name="construct.provenance")
 def construct_provenance(prov_Object, payload):
     """Parse Provenance Object and construct Provenance Graph."""
     graph = Graph()
