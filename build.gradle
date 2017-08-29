@@ -50,15 +50,8 @@ python {
 
 dependencies {
     python 'pypi:pbr:3.1.1'
-    // python 'pypi:funcsigs:1.0.2'
     python 'pypi:pytz:2016.4'
     python 'pypi:jsonschema:2.6.0'
-    // python 'pypi:stomp.py:4.1.18'
-    // python 'pypi:stompest:2.3.0'
-    // python 'pypi:stompest.async:2.3.0'
-    // python 'pypi:Twisted:17.5.0'
-    // python 'pypi:SQLAlchemy:1.1.13'
-    // python 'pypi:pylibmc:1.5.2'
     python 'pypi:celery:4.1.0'
     python 'pypi:pika:0.10.0'
     python 'pypi:falcon:1.2.0'
@@ -73,7 +66,6 @@ dependencies {
     python 'pypi:click:6.7'
     test 'pypi:pbr:3.1.1'
     test 'pypi:pytz:2016.4'
-    // test 'pypi:mock:1.2.0'
     test 'pypi:httpretty:0.8.14'
     test 'pypi:responses:0.7.0'
 }

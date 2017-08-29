@@ -14,9 +14,11 @@ class ConstructProvenance(object):
         """Respond on GET request to map endpoint."""
         response = construct_provenance.delay(parsed["provenance"], parsed["payload"])
         result = {'task_id': response.id}
-        print response.result
-        print response.status
         resp.body = json.dumps(result)
+        resp.content_type = 'application/json'
+        # result = construct_provenance(parsed["provenance"], parsed["payload"])
+        # resp.body = result
+        # resp.content_type = 'text/turtle'
         resp.status = falcon.HTTP_200
         app_logger.info('Accepted POST Request for /prov.')
 

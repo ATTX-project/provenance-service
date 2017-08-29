@@ -3,6 +3,7 @@ import multiprocessing
 import gunicorn.app.base
 from prov.app import init_api
 from prov.utils.queue import init_celery
+from prov.utils.messaging import broker
 from celery.bin import worker
 from gunicorn.six import iteritems
 
@@ -30,12 +31,18 @@ def server(host, port, log, workers):
 
 
 @cli.command('queue')
-@click.option('--address', default='localhost', help='prov message host.')
-def queue(address):
+@click.option('--address', default='localhost', help='message broker host.')
+@click.option('--user', help='message broker user.')
+@click.option('--password', help='message broker password.')
+def queue(user, password, address):
     """Task execution with options."""
-    test = worker.worker(app=init_celery(address))
+    username = broker['user'] if user is None else user
+    key = broker['pass'] if password is None else password
+    host = broker['host'] if address is None else address
+
+    test = worker.worker(app=init_celery(username, key, host))
     options = {
-        'broker': 'amqp://user:password@{0}:5672//'.format(address),
+        'broker': 'amqp://{0}:{1}@{2}:5672//'.format(username, key, host),
         'loglevel': 'INFO',
         'traceback': True,
     }

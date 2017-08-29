@@ -12,7 +12,7 @@
                             "items": {
                                 "properties": {
                                     "input": {
-                                        "type": "object"
+                                        "type": "array"
                                     },
                                     "role": {
                                         "type": "string"
@@ -77,10 +77,10 @@
                     "type": "object"
                 },
                 "input": {
-                    "type": "object"
+                    "type": "array"
                 },
                 "output": {
-                    "type": "object"
+                    "type": "array"
                 }
             },
             "type": "object"

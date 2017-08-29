@@ -5,8 +5,9 @@ from prov.utils.prefixes import bind_prefix, create_URI, ATTXProv, PROV, ATTXBas
 from prov.utils.logs import app_logger
 from prov.utils.graph_store import GraphStore
 from prov.utils.queue import init_celery
+from prov.utils.messaging import broker
 
-app = init_celery('localhost')
+app = init_celery(broker['user'], broker['pass'], broker['host'])
 
 
 @app.task(name="construct.provenance")
@@ -136,11 +137,12 @@ def prov_communication(graph, activity_URI, workflow_base_URI, base_URI, prov_Ob
         # information about the Role
         graph.add((sender_role_URI, RDF.type, PROV.Role))
         for key in activity['input']:
-            communication_entity = URIRef("{0}_{1}".format(key_entity, hashlib.md5(str(key)).hexdigest()))
+            communication_entity = URIRef("{0}_{1}".format(key_entity, hashlib.md5(str(key['key'])).hexdigest()))
             graph.add((key_entity, PROV.used, communication_entity))
-            if activity['input'][key].get('role'):
+            print key
+            if key.get('role'):
                 bnode_usage = BNode()
-                receiver_role_URI = create_URI(ATTXBase, workflow_base_URI, activity['input'][key]['role'])
+                receiver_role_URI = create_URI(ATTXBase, workflow_base_URI, key['role'])
                 graph.add((key_entity, PROV.qualifiedUsage, bnode_usage))
                 graph.add((bnode_usage, RDF.type, PROV.Usage))
                 graph.add((bnode_usage, PROV.entity, communication_entity))
@@ -155,11 +157,11 @@ def prov_usage(graph, activity_URI, workflow_base_URI, input_Object, payload):
     """Create qualified Usage if possible."""
     # bnode = BNode()
     for key in input_Object:
-        key_entity = create_URI(ATTXBase, workflow_base_URI, key)
+        key_entity = create_URI(ATTXBase, workflow_base_URI, key['key'])
         graph.add((activity_URI, PROV.used, key_entity))
-        if input_Object[key].get('role'):
-            role_URI = create_URI(ATTXBase, input_Object[key]['role'])
-            usage_URI = create_URI(ATTXBase, "used", hashlib.md5(str(key + role_URI)).hexdigest())
+        if key.get('role'):
+            role_URI = create_URI(ATTXBase, key['role'])
+            usage_URI = create_URI(ATTXBase, "used", hashlib.md5(str(key['key'] + role_URI)).hexdigest())
             graph.add((activity_URI, PROV.qualifiedUsage, usage_URI))
             graph.add((usage_URI, RDF.type, PROV.Usage))
             graph.add((usage_URI, PROV.entity, key_entity))
@@ -167,8 +169,8 @@ def prov_usage(graph, activity_URI, workflow_base_URI, input_Object, payload):
             graph.add((role_URI, RDF.type, PROV.Role))
 
         graph.add((key_entity, RDF.type, PROV.Entity))
-        if payload.get(key):
-            graph.add((key_entity, DCTERMS.source, Literal(str(payload[key]))))
+        if payload.get(key['key']):
+            graph.add((key_entity, DCTERMS.source, Literal(str(payload[key['key']]))))
     return graph
 
 
@@ -176,11 +178,11 @@ def prov_generation(graph, activity_URI, workflow_base_URI, output_Object, paylo
     """Create qualified Usage if possible."""
     # bnode = BNode()
     for key in output_Object:
-        key_entity = create_URI(ATTXBase, workflow_base_URI, key)
+        key_entity = create_URI(ATTXBase, workflow_base_URI, key['key'])
         graph.add((activity_URI, PROV.generated, key_entity))
-        if output_Object[key].get('role'):
-            role_URI = create_URI(ATTXBase, output_Object[key]['role'])
-            generation_URI = create_URI(ATTXBase, "generated", hashlib.md5(str(key + role_URI)).hexdigest())
+        if key.get('role'):
+            role_URI = create_URI(ATTXBase, key['role'])
+            generation_URI = create_URI(ATTXBase, "generated", hashlib.md5(str(key['key'] + role_URI)).hexdigest())
             graph.add((activity_URI, PROV.qualifiedGeneration, generation_URI))
             graph.add((generation_URI, RDF.type, PROV.Generation))
             graph.add((generation_URI, PROV.entity, key_entity))
@@ -188,8 +190,8 @@ def prov_generation(graph, activity_URI, workflow_base_URI, output_Object, paylo
             graph.add((role_URI, RDF.type, PROV.Role))
 
         graph.add((key_entity, RDF.type, PROV.Entity))
-        if payload.get(key):
-            graph.add((key_entity, DCTERMS.source, Literal(str(payload[key]))))
+        if payload.get(key['key']):
+            graph.add((key_entity, DCTERMS.source, Literal(str(payload[key['key']]))))
     return graph
 
 
