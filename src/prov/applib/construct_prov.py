@@ -5,7 +5,7 @@ from prov.utils.prefixes import bind_prefix, create_URI, ATTXProv, PROV, ATTXBas
 from prov.utils.logs import app_logger
 from prov.utils.graph_store import GraphStore
 from prov.utils.queue import init_celery
-from prov.utils.messaging import broker
+from prov.utils.broker import broker
 
 app = init_celery(broker['user'], broker['pass'], broker['host'])
 
