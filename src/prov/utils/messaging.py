@@ -1,71 +1,73 @@
-# import pika
 import json
+import time
+import amqpstorm
 from amqpstorm import Connection
+from prov.utils.logs import app_logger
 from prov.applib.construct_prov import construct_provenance
 
 
-# class PikaMessaging(object):
-#     """Handle RabbitMQ communication."""
-#
-#     def __init__(self):
-#         """Init function for message broker connection."""
-#         self.credentials = pika.PlainCredentials('user', 'password')
-#         self.connection = pika.BlockingConnection(pika.ConnectionParameters('localhost', 5672, '/', self.credentials))
-#
-#         self.channel = self.connection.channel()
-#
-#         result = self.channel.queue_declare(exclusive=True)
-#         self.callback_queue = result.method.queue
-#
-#         self.channel.basic_consume(self.on_response, no_ack=True,
-#                                    queue=self.callback_queue)
+class Consumer(object):
+    """Provenance message consumer."""
 
+    def __init__(self, hostname='127.0.0.1',
+                 username='guest', password='guest',
+                 queue='provenance.inbox',
+                 max_retries=None):
+        """Consumer init function."""
+        self.hostname = hostname
+        self.username = username
+        self.password = password
+        self.queue = queue
+        self.max_retries = max_retries
+        self.connection = None
 
-def on_message(body, channel, method, properties):
-    """Function is called when a message is received.
+    def create_connection(self):
+        """Create a connection.
 
-    :param bytes|str|unicode body: Message payload
-    :param Channel channel: AMQPStorm Channel
-    :param dict method: Message method
-    :param dict properties: Message properties
-    :return:
-    """
-    prov = json.loads(body)
-    response = construct_provenance.delay(prov["provenance"], prov["payload"])
-    result = {'task_id': response.id}
-    print(result)
-    # print("Message:", prov["provenance"])
-
-    # Acknowledge that we handled the message without any issues.
-    channel.basic.ack(delivery_tag=method['delivery_tag'])
-
-
-def consumer(host, user, password):
-    """Typical consumer."""
-    with Connection(host, user, password) as connection:
-        with connection.channel() as channel:
-            # Declare the Queue, 'simple_queue'.
-            channel.queue.declare('simple_queue')
-
-            # Set QoS to 100.
-            # This will limit the consumer to only prefetch a 100 messages.
-
-            # This is a recommended setting, as it prevents the
-            # consumer from keeping all of the messages in a queue to itself.
-            channel.basic.qos(100)
-
-            # Start consuming the queue 'simple_queue' using the callback
-            # 'on_message' and last require the message to be acknowledged.
-            channel.basic.consume(on_message, 'simple_queue', no_ack=False)
-
+        :return:
+        """
+        attempts = 0
+        while True:
+            attempts += 1
             try:
-                # Start consuming messages.
-                # to_tuple equal to True means that messages consumed
-                # are returned as tuple, rather than a Message object.
-                channel.start_consuming(to_tuple=True)
+                self.connection = Connection(self.hostname, self.username, self.password)
+                app_logger.info('Established connection with AMQP server {0}'.format(self.connection))
+                break
+            except amqpstorm.AMQPError as why:
+                app_logger.expection(why)
+                if self.max_retries and attempts > self.max_retries:
+                    break
+                time.sleep(min(attempts * 2, 30))
             except KeyboardInterrupt:
-                channel.close()
+                break
 
+    def start(self):
+        """Start the Consumers.
 
-if __name__ == '__main__':
-    consumer()
+        :return:
+        """
+        if not self.connection:
+            self.create_connection()
+        while True:
+            try:
+                channel = self.connection.channel()
+                channel.queue.declare(self.queue)
+                channel.basic.consume(self, self.queue, no_ack=False)
+                app_logger.info('Connected to queue {0}'.format(self.queue))
+                channel.start_consuming(to_tuple=False)
+                if not channel.consumer_tags:
+                    channel.close()
+            except amqpstorm.AMQPError as why:
+                app_logger.expection(why)
+                self.create_connection()
+            except KeyboardInterrupt:
+                self.connection.close()
+                break
+
+    def __call__(self, message):
+        """Process the message body."""
+        prov = json.loads(message.body)
+        response = construct_provenance.delay(prov["provenance"], prov["payload"])
+        result = {'task_id': response.id}
+        message.ack()
+        app_logger.info('Processed provenance message with result {0}.'.format(result))

@@ -3,7 +3,7 @@ import multiprocessing
 import gunicorn.app.base
 from prov.app import init_api
 from prov.utils.queue import init_celery
-from prov.utils.messaging import consumer
+from prov.utils.messaging import Consumer
 from prov.utils.broker import broker
 from celery.bin import worker
 from gunicorn.six import iteritems
@@ -50,10 +50,12 @@ def queue(user, password, address):
     test.run(**options)
 
 
-@cli.command('handler')
-def handler():
+@cli.command('consumer')
+def consumer():
     """Consuming some messages."""
-    consumer(broker['host'], broker['user'], broker['pass'])
+    # consumer(broker['host'], broker['user'], broker['pass'])
+    CONSUMER = Consumer(broker['host'], broker['user'], broker['pass'])
+    CONSUMER.start()
 
 
 class PROVService(gunicorn.app.base.BaseApplication):

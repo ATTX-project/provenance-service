@@ -33,7 +33,7 @@ def construct_provenance(prov_Object, payload):
             prov_graph = prov_dataset(graph, base_URI, workflow_base_URI, prov_Object, payload)
         else:
             prov_graph = prov_activity(graph, base_URI, workflow_base_URI, prov_Object, payload)
-        # store_provenance(prov_graph)
+        store_provenance(prov_graph.serialize(format='turtle'))
         return prov_graph.serialize(format='turtle')
     except Exception as error:
         app_logger.error('Something is wrong with parsing the prov_Object: {0}'.format(error))
