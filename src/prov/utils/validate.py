@@ -24,7 +24,7 @@ def validate(schema):
                         'Could not properly parse the provided data as JSON'
                     )
                 try:
-                    jsonschema.validate(obj, schema)
+                    jsonschema.validate(obj, schema, format_checker=jsonschema.FormatChecker())
                 except jsonschema.ValidationError as e:
                     raise falcon.HTTPBadRequest(
                         'Failed data validation',
