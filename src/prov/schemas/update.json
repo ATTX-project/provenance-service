@@ -1,0 +1,15 @@
+{
+    "properties": {
+        "namedGraph": {
+            "type": "string"
+        },
+        "triples": {
+            "type": "string"
+        }
+    },
+    "required": [
+        "triples",
+        "namedGraph"
+    ],
+    "type": "object"
+}
