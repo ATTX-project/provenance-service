@@ -46,6 +46,7 @@ if (!project.hasProperty("artifactRepoPassword")) {
 
 python {
     testDir = file('tests')
+    forceVersion('pypi', 'pytz', '2016.4') // needed in Jenkins for some reason
 }
 
 dependencies {

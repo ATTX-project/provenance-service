@@ -32,7 +32,7 @@ def server(host, port, log, workers):
 
 
 @cli.command('queue')
-@click.option('--address', default='localhost', help='message broker host.')
+@click.option('--address', help='message broker host.')
 @click.option('--user', help='message broker user.')
 @click.option('--password', help='message broker password.')
 def queue(user, password, address):
