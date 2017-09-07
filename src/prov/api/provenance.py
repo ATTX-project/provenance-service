@@ -9,13 +9,22 @@ from prov.applib.construct_prov import construct_provenance
 class ConstructProvenance(object):
     """Construct Provenance based on provided request."""
 
-    @validate(load_schema('provschema'))
+    @validate(load_schema('provschema'), load_schema('altprovschema'))
     def on_post(self, req, resp, parsed):
         """Respond on GET request to map endpoint."""
-        response = construct_provenance.delay(parsed["provenance"], parsed["payload"])
-        result = {'task_id': response.id}
-        resp.body = json.dumps(result)
-        resp.content_type = 'application/json'
+        if isinstance(parsed, dict):
+            response = construct_provenance.delay(parsed["provenance"], parsed["payload"])
+            result = {'task_id': response.id}
+            resp.body = json.dumps(result)
+            resp.content_type = 'application/json'
+        elif isinstance(parsed, list):
+            tasks = []
+            for obj in parsed:
+                response = construct_provenance.delay(obj["provenance"], obj["payload"])
+                tasks.append(response.id)
+            result = {'task_id': tasks}
+            resp.body = json.dumps(result)
+            resp.content_type = 'application/json'
         # result = construct_provenance(parsed["provenance"], parsed["payload"])
         # resp.body = result
         # resp.content_type = 'text/turtle'

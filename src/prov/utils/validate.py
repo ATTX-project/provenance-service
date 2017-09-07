@@ -3,7 +3,7 @@ import falcon
 import jsonschema
 
 
-def validate(schema):
+def validate(schema, altschema=None):
     """
     Validate against JSON schema an return something.
 
@@ -23,16 +23,27 @@ def validate(schema):
                         'Invalid data',
                         'Could not properly parse the provided data as JSON'
                     )
-                try:
-                    jsonschema.validate(obj, schema, format_checker=jsonschema.FormatChecker())
-                except jsonschema.ValidationError as e:
-                    raise falcon.HTTPBadRequest(
-                        'Failed data validation',
-                        e.message
-                    )
+                if altschema:
+                    try:
+                        jsonschema.validate(obj, altschema, format_checker=jsonschema.FormatChecker())
+                    except jsonschema.ValidationError:
+                        pass
+                else:
+                    schema_eval(obj, schema)
 
                 return func(self, req, resp, *args, parsed=obj, **kwargs)
             elif req.method == 'GET' or req.method == 'DELETE' and isinstance(req.path.split('/')[-1], int):
                 return func(self, req, resp, *args, **kwargs)
         return wrapper
     return decorator
+
+
+def schema_eval(obj, schema):
+    """Evaluate schema."""
+    try:
+        jsonschema.validate(obj, schema, format_checker=jsonschema.FormatChecker())
+    except jsonschema.ValidationError as e:
+        raise falcon.HTTPBadRequest(
+            'Failed data validation',
+            e.message
+        )

@@ -66,8 +66,18 @@ class Consumer(object):
 
     def __call__(self, message):
         """Process the message body."""
-        prov = json.loads(message.body)
-        response = construct_provenance.delay(prov["provenance"], prov["payload"])
-        result = {'task_id': response.id}
-        message.ack()
-        app_logger.info('Processed provenance message with result {0}.'.format(result))
+        try:
+            prov = json.loads(message.body)
+            if isinstance(prov, dict):
+                response = construct_provenance.delay(prov["provenance"], prov["payload"])
+                result = {'task_id': response.id}
+            elif isinstance(prov, list):
+                tasks = []
+                for obj in prov:
+                    response = construct_provenance.delay(obj["provenance"], obj["payload"])
+                    tasks.append(response.id)
+                result = {'task_id': tasks}
+            message.ack()
+            app_logger.info('Processed provenance message with result {0}.'.format(result))
+        except Exception as e:
+            app_logger.error('Something went wrong: {0}'.format(e))
