@@ -11,7 +11,7 @@ class Consumer(object):
 
     def __init__(self, hostname='127.0.0.1',
                  username='guest', password='guest',
-                 queue='provenance.inbox',
+                 queue='base.queue',
                  max_retries=None):
         """Consumer init function."""
         self.hostname = hostname

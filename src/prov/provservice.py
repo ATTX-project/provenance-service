@@ -54,7 +54,7 @@ def queue(user, password, address):
 def consumer():
     """Consuming some messages."""
     # consumer(broker['host'], broker['user'], broker['pass'])
-    CONSUMER = Consumer(broker['host'], broker['user'], broker['pass'])
+    CONSUMER = Consumer(broker['host'], broker['user'], broker['pass'], broker['queue'])
     CONSUMER.start()
 
 
