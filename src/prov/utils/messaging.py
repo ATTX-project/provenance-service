@@ -34,7 +34,7 @@ class Consumer(object):
                 app_logger.info('Established connection with AMQP server {0}'.format(self.connection))
                 break
             except amqpstorm.AMQPError as why:
-                app_logger.expection(why)
+                app_logger.error(why)
                 if self.max_retries and attempts > self.max_retries:
                     break
                 time.sleep(min(attempts * 2, 30))
@@ -58,7 +58,7 @@ class Consumer(object):
                 if not channel.consumer_tags:
                     channel.close()
             except amqpstorm.AMQPError as why:
-                app_logger.expection(why)
+                app_logger.error(why)
                 self.create_connection()
             except KeyboardInterrupt:
                 self.connection.close()

@@ -66,9 +66,9 @@ def prov_activity(graph, base_URI, workflow_base_URI, prov_Object, payload):
     if activity.get('communication'):
         prov_communication(graph, activity_URI, workflow_base_URI, base_URI, prov_Object)
     if prov_Object.get('input'):
-        prov_usage(graph, activity_URI, workflow_base_URI, prov_Object['input'], payload)
+        prov_usage(graph, activity_URI, prov_Object['input'], payload)
     if prov_Object.get('output'):
-        prov_generation(graph, activity_URI, workflow_base_URI, prov_Object['output'], payload)
+        prov_generation(graph, activity_URI, prov_Object['output'], payload)
     app_logger.info('Constructed provenance for Activity with URI: attx:{0}.' .format(base_URI))
     return graph
 
@@ -153,11 +153,11 @@ def prov_communication(graph, activity_URI, workflow_base_URI, base_URI, prov_Ob
     return graph
 
 
-def prov_usage(graph, activity_URI, workflow_base_URI, input_Object, payload):
+def prov_usage(graph, activity_URI, input_Object, payload):
     """Create qualified Usage if possible."""
     # bnode = BNode()
     for key in input_Object:
-        key_entity = create_URI(ATTXBase, workflow_base_URI, key['key'])
+        key_entity = URIRef("{0}_{1}".format(activity_URI, key['key']))
         graph.add((activity_URI, PROV.used, key_entity))
         if key.get('role'):
             role_URI = create_URI(ATTXBase, key['role'])
@@ -174,11 +174,11 @@ def prov_usage(graph, activity_URI, workflow_base_URI, input_Object, payload):
     return graph
 
 
-def prov_generation(graph, activity_URI, workflow_base_URI, output_Object, payload):
+def prov_generation(graph, activity_URI, output_Object, payload):
     """Create qualified Usage if possible."""
     # bnode = BNode()
     for key in output_Object:
-        key_entity = create_URI(ATTXBase, workflow_base_URI, key['key'])
+        key_entity = URIRef("{0}_{1}".format(activity_URI, key['key']))
         graph.add((activity_URI, PROV.generated, key_entity))
         if key.get('role'):
             role_URI = create_URI(ATTXBase, key['role'])
