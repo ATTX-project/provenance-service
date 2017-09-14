@@ -7,6 +7,10 @@ buildscript {
     }
 }
 
+plugins {
+  id 'net.researchgate.release' version '2.6.0'
+}
+
 apply plugin: 'maven'
 apply plugin: 'com.linkedin.python-cli'
 
@@ -91,6 +95,28 @@ repositories {
               artifact '[organisation]/[module]/[revision]/[artifact]-[revision](-[classifier]).[ext]'
               ivy '[organisation]/[module]/[revision]/[module]-[revision].ivy'
         }
+    }
+}
+
+release {
+    failOnCommitNeeded = true
+    failOnPublishNeeded = true
+    failOnSnapshotDependencies = true
+    failOnUnversionedFiles = true
+    failOnUpdateNeeded = true
+    revertOnFail = true
+    tagCommitMessage = '[Gradle Release Plugin] - creating tag: '
+    tagTemplate = '$name-$version'
+    scmAdapters = [
+        net.researchgate.release.GitAdapter
+    ]
+
+    git {
+        requireBranch = 'master'
+        pushToRemote = 'origin'
+        pushToBranchPrefix = ''
+        commitVersionFileOnly = false
+        signTag = false
     }
 }
 
