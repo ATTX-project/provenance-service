@@ -1,0 +1,96 @@
+{
+    "items": {
+    "type": "object",
+    "properties": {
+        "payload": {
+            "properties": {},
+            "type": "object"
+        },
+        "provenance": {
+            "properties": {
+                "activity": {
+                    "properties": {
+                        "communication": {
+                            "items": {
+                                "properties": {
+                                    "input": {
+                                        "type": "array"
+                                    },
+                                    "role": {
+                                        "type": "string"
+                                    },
+                                    "agent": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "type": "array"
+                        },
+                        "description": {
+                            "type": "string"
+                        },
+                        "endTime": {
+                            "type": "string"
+                        },
+                        "startTime": {
+                            "type": "string"
+                        },
+                        "status": {
+                            "type": "string"
+                        },
+                        "title": {
+                            "type": "string"
+                        },
+                        "type": {
+                            "type": "string"
+                        }
+                    },
+                    "type": "object"
+                },
+                "agent": {
+                    "properties": {
+                        "ID": {
+                            "type": "string"
+                        },
+                        "role": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "role",
+                        "ID"
+                    ],
+                    "type": "object"
+                },
+                "context": {
+                    "properties": {
+                        "activityID": {
+                        },
+                        "stepID": {
+                        },
+                        "workflowID": {
+                        }
+                    },
+                    "required": [
+                        "workflowID",
+                        "activityID"
+                    ],
+                    "type": "object"
+                },
+                "input": {
+                    "type": "array"
+                },
+                "output": {
+                    "type": "array"
+                }
+            },
+            "type": "object"
+        }
+    },
+    "required": [
+        "provenance",
+        "payload"
+    ]},
+    "type": "array"
+}
