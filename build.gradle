@@ -14,7 +14,7 @@ plugins {
 apply plugin: 'maven'
 apply plugin: 'com.linkedin.python-cli'
 
-ext.version_nb = "0.2"
+ext.version_nb = "2.0"
 
 version = "$version_nb"
 
