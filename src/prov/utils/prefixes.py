@@ -1,5 +1,5 @@
 from rdflib import Namespace, URIRef
-from ConfigParser import SafeConfigParser
+# from ConfigParser import SafeConfigParser
 
 PROV = Namespace('http://www.w3.org/ns/prov#')
 SD = Namespace('http://www.w3.org/ns/sparql-service-description#')
@@ -37,9 +37,9 @@ def create_URI(namespace, string, connector=None):
 
 
 # TBD
-def namspace_config(config_file):
-    """Read Namespace config from file."""
-    parser = SafeConfigParser()
-    parser.read(config_file)
-
-    pass
+# def namspace_config(config_file):
+#     """Read Namespace config from file."""
+#     parser = SafeConfigParser()
+#     parser.read(config_file)
+#
+#     pass

@@ -1,0 +1,116 @@
+{
+    "datasets": {
+        "/test": {
+            "Requests": 0,
+            "RequestsGood": 0,
+            "RequestsBad": 0,
+            "endpoints": {
+                "": {
+                    "RequestsBad": 0,
+                    "Requests": 0,
+                    "RequestsGood": 0,
+                    "operation": "Quads_RW",
+                    "description": "HTTP Quads"
+                },
+                "update": {
+                    "RequestsBad": 0,
+                    "Requests": 0,
+                    "RequestsGood": 0,
+                    "operation": "Update",
+                    "description": "SPARQL Update"
+                },
+                "query": {
+                    "RequestsBad": 0,
+                    "Requests": 0,
+                    "RequestsGood": 0,
+                    "operation": "Query",
+                    "description": "SPARQL Query"
+                },
+                "sparql": {
+                    "RequestsBad": 0,
+                    "Requests": 0,
+                    "RequestsGood": 0,
+                    "operation": "Query",
+                    "description": "SPARQL Query"
+                },
+                "data": {
+                    "RequestsBad": 0,
+                    "Requests": 0,
+                    "RequestsGood": 0,
+                    "operation": "GSP_RW",
+                    "description": "Graph Store Protocol"
+                },
+                "upload": {
+                    "RequestsBad": 0,
+                    "Requests": 0,
+                    "RequestsGood": 0,
+                    "operation": "Upload",
+                    "description": "File Upload"
+                },
+                "get": {
+                    "RequestsBad": 0,
+                    "Requests": 0,
+                    "RequestsGood": 0,
+                    "operation": "GSP_R",
+                    "description": "Graph Store Protocol (Read)"
+                }
+            }
+        },
+        "/ds": {
+            "Requests": 1,
+            "RequestsGood": 1,
+            "RequestsBad": 0,
+            "endpoints": {
+                "": {
+                    "RequestsBad": 0,
+                    "Requests": 0,
+                    "RequestsGood": 0,
+                    "operation": "Quads_RW",
+                    "description": "HTTP Quads"
+                },
+                "update": {
+                    "RequestsBad": 0,
+                    "Requests": 0,
+                    "RequestsGood": 0,
+                    "operation": "Update",
+                    "description": "SPARQL Update"
+                },
+                "sparql": {
+                    "RequestsBad": 0,
+                    "Requests": 0,
+                    "RequestsGood": 0,
+                    "operation": "Query",
+                    "description": "SPARQL Query"
+                },
+                "query": {
+                    "RequestsBad": 0,
+                    "Requests": 1,
+                    "RequestsGood": 1,
+                    "operation": "Query",
+                    "description": "SPARQL Query"
+                },
+                "data": {
+                    "RequestsBad": 0,
+                    "Requests": 0,
+                    "RequestsGood": 0,
+                    "operation": "GSP_RW",
+                    "description": "Graph Store Protocol"
+                },
+                "upload": {
+                    "RequestsBad": 0,
+                    "Requests": 0,
+                    "RequestsGood": 0,
+                    "operation": "Upload",
+                    "description": "File Upload"
+                },
+                "get": {
+                    "RequestsBad": 0,
+                    "Requests": 0,
+                    "RequestsGood": 0,
+                    "operation": "GSP_R",
+                    "description": "Graph Store Protocol (Read)"
+                }
+            }
+        }
+    }
+}

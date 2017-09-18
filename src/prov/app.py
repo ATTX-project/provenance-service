@@ -29,5 +29,5 @@ def init_api():
     return provservice
 
 
-if __name__ == '__main__':
-    init_api()
+# if __name__ == '__main__':
+#     init_api()

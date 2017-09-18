@@ -10,17 +10,13 @@ class GraphStore(object):
 
     def __init__(self):
         """Check if we have everything to work with the Graph Store."""
-        try:
-            self.host = os.environ['GHOST'] if 'GHOST' in os.environ else "localhost"
-            self.port = os.environ['GPORT'] if 'GPORT' in os.environ else "3030"
-            self.dataset = os.environ['DS'] if 'DS' in os.environ else "ds"
-            self.key = os.environ['GKEY'] if 'GKEY' in os.environ else "pw123"
+        self.host = os.environ['GHOST'] if 'GHOST' in os.environ else "localhost"
+        self.port = os.environ['GPORT'] if 'GPORT' in os.environ else "3030"
+        self.dataset = os.environ['DS'] if 'DS' in os.environ else "ds"
+        self.key = os.environ['GKEY'] if 'GKEY' in os.environ else "pw123"
 
-            self.server_address = "http://{0}:{1}/$/".format(self.host, self.port)
-            self.request_address = "http://{0}:{1}/{2}/".format(self.host, self.port, self.dataset)
-        except Exception as error:
-            app_logger.error('Something is wrong: {0}'.format(error))
-            raise error.message
+        self.server_address = "http://{0}:{1}/$/".format(self.host, self.port)
+        self.request_address = "http://{0}:{1}/{2}/".format(self.host, self.port, self.dataset)
 
     def graph_health(self):
         """Do the Health check for Graph Store."""

@@ -3,7 +3,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath group: 'com.linkedin.pygradle', name: 'pygradle-plugin', version: '0.6.11'
+        classpath group: 'com.linkedin.pygradle', name: 'pygradle-plugin', version: '0.6.12'
     }
 }
 

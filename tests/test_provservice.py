@@ -30,7 +30,7 @@ class TestAPIStart(unittest.TestCase):
 
     def test_command(self):
         """Test Running from command line."""
-        @click.command()
+        @click.command("server")
         @click.option('--host')
         def start(host):
             click.echo('{0}'.format(host))
