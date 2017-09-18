@@ -59,16 +59,25 @@ class GraphTestCase(GraphStoreTest):
         resp = fuseki.graph_list()
         assert(resp == graph_list)
 
+    @responses.activate
+    def test_graph_stats(self):
+        """Test graph list on graph endpoint."""
+        list_query = quote("select ?g (count(*) as ?count) {graph ?g {?s ?p ?o}} group by ?g")
+        with open('tests/resources/graph_stats_request.json') as datafile1:
+            graph_data = json.load(datafile1)
+        with open('tests/resources/graph_stats_response.json') as datafile2:
+            graph_list = json.load(datafile2)
+        responses.add(responses.GET, "{0}stats/{1}".format(self.server_address, "ds"), json=graph_data, status=200)
+        with open('tests/resources/graph_list_request.json') as datafile3:
+            graph_data2 = json.load(datafile3)
+        responses.add(responses.GET, "{0}sparql?query={1}".format(self.request_address, list_query), json=graph_data2, status=200)
+        # responses.add(responses.GET, "{0}{1}/graph/statistics".format(self.api, self.version), json=graph_list, status=200)
+        # resp = requests.get("{0}{1}/graph/statistics".format(self.api, self.version))
+        # assert(resp.text == graph_list)
+        fuseki = GraphStore()
+        resp = fuseki.graph_statistics()
+        assert(resp == graph_list)
+
 
 if __name__ == "__main__":
     unittest.main()
-
-
-# {
-#     "dataset": "/ds",
-#     "requests": {
-#         "failedRequests": 0,
-#         "totalRequests": 1
-#     },
-#     "totalTriples": 388
-# }
