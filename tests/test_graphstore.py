@@ -55,9 +55,9 @@ class GraphTestCase(GraphStoreTest):
         # responses.add(responses.GET, "{0}{1}/graph/statistics".format(self.api, self.version), json=graph_list, status=200)
         # resp = requests.get("{0}{1}/graph/statistics".format(self.api, self.version))
         # assert(resp.text == graph_list)
-        # fuseki = GraphStore()
-        # resp2 = fuseki.graph_list()
-        assert(resp2 == graph_list)
+        fuseki = GraphStore()
+        resp = fuseki.graph_list()
+        assert(resp == graph_list)
 
 
 if __name__ == "__main__":
