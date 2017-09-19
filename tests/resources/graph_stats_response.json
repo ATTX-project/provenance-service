@@ -1,0 +1,8 @@
+{
+    "dataset": "/ds",
+    "requests": {
+        "failedRequests": 0,
+        "totalRequests": 1
+    },
+    "totalTriples": 388
+}

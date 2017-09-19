@@ -4,7 +4,7 @@ from prov.utils.prefixes import bind_prefix, ATTXBase, create_URI
 
 
 class PrefixTestCase(unittest.TestCase):
-    """Test for DB connection."""
+    """Test for Prefixes connection."""
 
     def setUp(self):
         """Set up test fixtures."""

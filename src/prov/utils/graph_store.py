@@ -77,7 +77,6 @@ class GraphStore(object):
             app_logger.error('Something is wrong: {0}'.format(error))
             raise error
         if request.status_code == 200:
-            # print request.text
             app_logger.info('Retrived named graph: {0}.'.format(named_graph))
             return request.text
         elif request.status_code == 404:
