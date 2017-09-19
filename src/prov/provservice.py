@@ -41,13 +41,13 @@ def queue(user, password, address):
     key = broker['pass'] if password is None else password
     host = broker['host'] if address is None else address
 
-    test = worker.worker(app=init_celery(username, key, host))
+    queue = worker.worker(app=init_celery(username, key, host))
     options = {
         'broker': 'amqp://{0}:{1}@{2}:5672//'.format(username, key, host),
         'loglevel': 'INFO',
         'traceback': True,
     }
-    test.run(**options)
+    queue.run(**options)
 
 
 @cli.command('consumer')

@@ -24,10 +24,7 @@ def validate(schema, altschema=None):
                         'Could not properly parse the provided data as JSON'
                     )
                 if altschema:
-                    try:
-                        jsonschema.validate(obj, altschema, format_checker=jsonschema.FormatChecker())
-                    except jsonschema.ValidationError:
-                        pass
+                    schema_alt_eval(obj, altschema, schema)
                 else:
                     schema_eval(obj, schema)
 
@@ -47,3 +44,11 @@ def schema_eval(obj, schema):
             'Failed data validation',
             e.message
         )
+
+
+def schema_alt_eval(obj, altschema, schema):
+    """Evaluate schema."""
+    try:
+        jsonschema.validate(obj, altschema, format_checker=jsonschema.FormatChecker())
+    except jsonschema.ValidationError:
+        schema_eval(obj, schema)

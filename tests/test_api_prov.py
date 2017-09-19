@@ -8,7 +8,7 @@ from falcon import testing
 from prov.app import init_api
 
 
-class QueueAPITestCase(testing.TestCase):
+class ProvenanceAPITestCase(testing.TestCase):
     """Testing Graph Store and initialize the app for that.."""
 
     def setUp(self):
@@ -22,7 +22,7 @@ class QueueAPITestCase(testing.TestCase):
         pass
 
 
-class QueueTestCase(QueueAPITestCase):
+class ProvTestCase(ProvenanceAPITestCase):
     """Test for Graph Store operations."""
 
     def test_create(self):
@@ -52,11 +52,29 @@ class QueueTestCase(QueueAPITestCase):
     #     assert(result.status == falcon.HTTP_200)
 
     @responses.activate
-    def test_api_queue_get(self):
+    def test_api_prov_get(self):
         """Test get specific prov id from endpoint."""
-        responses.add(responses.GET, "{0}{1}/status/task/{2}".format(self.api, self.version, "123"), status=200)
-        result = self.simulate_get("/{0}/status/task/{1}".format(self.version, "123"))
+        responses.add(responses.GET, "{0}{1}/prov/show/{2}".format(self.api, self.version, "123"), status=200)
+        result = self.simulate_get("/{0}/prov/show/{1}".format(self.version, "123"))
         assert(result.status == falcon.HTTP_200)
+
+    @responses.activate
+    def test_api_prov_no_data(self):
+        """Test prov validate no data."""
+        hdrs = [('Accept', 'application/json'),
+                ('Content-Type', 'application/json'), ]
+        result = self.simulate_post('/{0}/prov'.format(self.version), body='', headers=hdrs)
+        assert(result.status == falcon.HTTP_400)
+
+    @responses.activate
+    def test_api_prov_bad(self):
+        """Test prov bad input."""
+        with open('tests/resources/prov_request_bad.json') as datafile:
+            graph_data = datafile.read().replace('\n', '')
+        hdrs = [('Accept', 'application/json'),
+                ('Content-Type', 'application/json'), ]
+        result = self.simulate_post('/{0}/prov'.format(self.version), body=graph_data, headers=hdrs)
+        assert(result.status == falcon.HTTP_400)
 
 
 if __name__ == "__main__":

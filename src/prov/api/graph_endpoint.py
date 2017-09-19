@@ -45,7 +45,6 @@ class GraphResource(object):
             resp.status = falcon.HTTP_200
         else:
             raise falcon.HTTPGone()
-            app_logger.warning('Retrieving: {0} is impossible graph does not exist or was deleted.'.format(graphURI))
 
     def on_delete(self, req, resp):
         """Execution of the DELETE named graph request."""

@@ -43,8 +43,8 @@ class GraphTestCase(GraphStoreTest):
         """Test_ping on graph endpoint."""
         responses.add(responses.GET, "http://localhost:3030/{0}/ping".format("$"), "2017-09-18T11:41:19.915+00:00", status=200)
         fuseki = GraphStore()
-        resp = fuseki.graph_health()
-        self.assertTrue(resp)
+        result = fuseki.graph_health()
+        self.assertTrue(result)
 
     @responses.activate
     def test_graph_list(self):
@@ -55,12 +55,9 @@ class GraphTestCase(GraphStoreTest):
         with open('tests/resources/graph_list_response.json') as datafile2:
             graph_list = json.load(datafile2)
         responses.add(responses.GET, "{0}sparql?query={1}".format(self.request_address, list_query), json=graph_data, status=200)
-        # responses.add(responses.GET, "{0}{1}/graph/statistics".format(self.api, self.version), json=graph_list, status=200)
-        # resp = requests.get("{0}{1}/graph/statistics".format(self.api, self.version))
-        # assert(resp.text == graph_list)
         fuseki = GraphStore()
-        resp = fuseki.graph_list()
-        assert(resp == graph_list)
+        result = fuseki.graph_list()
+        assert(result == graph_list)
 
     @responses.activate
     def test_graph_list_bad(self):
@@ -81,12 +78,9 @@ class GraphTestCase(GraphStoreTest):
             graph_list = json.load(datafile3)
         responses.add(responses.GET, "{0}stats/{1}".format(self.server_address, "ds"), json=graph_data, status=200)
         responses.add(responses.GET, "{0}sparql?query={1}".format(self.request_address, list_query), json=graph_list, status=200)
-        # responses.add(responses.GET, "{0}{1}/graph/statistics".format(self.api, self.version), json=graph_list, status=200)
-        # resp = requests.get("{0}{1}/graph/statistics".format(self.api, self.version))
-        # assert(resp.text == graph_list)
         fuseki = GraphStore()
-        resp = fuseki.graph_statistics()
-        assert(resp == graph_stats)
+        result = fuseki.graph_statistics()
+        assert(result == graph_stats)
 
     @responses.activate
     def test_graph_stats_bad(self):
@@ -100,8 +94,8 @@ class GraphTestCase(GraphStoreTest):
         """Test graph retrieve non-existent graph."""
         responses.add(responses.GET, "{0}data?graph={1}".format(self.request_address, "http://test.com"), status=404)
         fuseki = GraphStore()
-        resp = fuseki.retrieve_graph("default")
-        self.assertIsNone(resp)
+        result = fuseki.retrieve_graph("default")
+        self.assertIsNone(result)
 
     @responses.activate
     def test_graph_retrieve_ttl(self):
@@ -111,8 +105,8 @@ class GraphTestCase(GraphStoreTest):
         url = "http://data.hulib.helsinki.fi/attx/strategy"
         responses.add(responses.GET, "{0}data?graph={1}".format(self.request_address, url), body=graph_data, status=200)
         fuseki = GraphStore()
-        resp = fuseki.retrieve_graph("http://data.hulib.helsinki.fi/attx/strategy")
-        assert(resp == graph_data)
+        result = fuseki.retrieve_graph("http://data.hulib.helsinki.fi/attx/strategy")
+        assert(result == graph_data)
 
     @responses.activate
     def test_graph_retrieve_bad(self):
@@ -142,8 +136,8 @@ class GraphTestCase(GraphStoreTest):
             content_type='text/turtle',
         )
         fuseki = GraphStore()
-        resp = fuseki.graph_update(url, graph_data)
-        assert(resp == response_data)
+        result = fuseki.graph_update(url, graph_data)
+        assert(result == response_data)
 
     @responses.activate
     def test_graph_update_bad(self):
@@ -172,8 +166,8 @@ class GraphTestCase(GraphStoreTest):
             content_type="application/x-www-form-urlencoded",
         )
         fuseki = GraphStore()
-        resp = fuseki.drop_graph(url)
-        assert(resp == graph_data)
+        result = fuseki.drop_graph(url)
+        assert(result == graph_data)
 
     @responses.activate
     def test_graph_drop_bad(self):
@@ -192,10 +186,8 @@ class GraphTestCase(GraphStoreTest):
         request_url = "{0}query?default-graph-uri=%s&query={1}&output=xml&results=xml&format=xml".format(self.request_address, url, list_query)
         httpretty.register_uri(httpretty.GET, request_url, graph_data, status=200, content_type="application/sparql-results+xml")
         fuseki = GraphStore()
-        resp = fuseki.graph_sparql(url, list_query)
-        print resp
-        print graph_data
-        assert(resp == graph_data)
+        result = fuseki.graph_sparql(url, list_query)
+        assert(result == graph_data)
 
     @responses.activate
     def test_graph_sparql_bad(self):
