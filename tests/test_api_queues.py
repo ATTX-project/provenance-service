@@ -1,8 +1,5 @@
 import unittest
-# from urllib import quote
 import responses
-# import json
-# import httpretty
 import falcon
 from falcon import testing
 from prov.app import init_api
@@ -29,27 +26,6 @@ class QueueTestCase(QueueAPITestCase):
         """Test create message."""
         self.app
         pass
-
-    # @responses.activate
-    # def test_api_prov(self):
-    #     """Test graph list on graph endpoint."""
-    #     with open('tests/resources/prov_request.json') as datafile:
-    #         graph_data = datafile.read().replace('\n', '')
-    #
-    #     def request_callback(request):
-    #         """Request callback for drop graph."""
-    #         resp_body = graph_data
-    #         headers = {'content-type': "application/json",
-    #                    'cache-control': "no-cache"}
-    #         return (200, headers, json.dumps(resp_body))
-    #
-    #     responses.add_callback(
-    #         responses.POST, "{0}{1}/prov".format(self.api, self.version),
-    #         callback=request_callback,
-    #         content_type='application/json',
-    #     )
-    #     result = self.simulate_post("/{0}/prov".format(self.version), body=graph_data)
-    #     assert(result.status == falcon.HTTP_200)
 
     @responses.activate
     def test_api_queue_get(self):

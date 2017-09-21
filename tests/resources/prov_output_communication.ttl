@@ -39,10 +39,15 @@ attx:used_8c7a94b79785a3e0a13b22d176194f34 a prov:Usage ;
     prov:hadRole attx:tempDataset .
 
 attx:workflowingestionwf_activity1_stepreplaceds_GMAPI a prov:Activity ;
+    prov:qualifiedUsage [ a prov:Usage ;
+            prov:entity attx:workflowingestionwf_activity1_stepreplaceds_GMAPI_b39d544213c61593513e8771de3ade8c ;
+            prov:hadRole attx:workflowingestionwf_activity1_tempDataset ] ;
+    prov:used attx:workflowingestionwf_activity1_stepreplaceds_GMAPI_b39d544213c61593513e8771de3ade8c ;
     prov:wasAssociatedWith attx:GMAPI .
 
 attx:workflowingestionwf_activity1_stepreplaceds_UV a attxonto:StepExecution,
         prov:Activity ;
+    dcterms:description "something peachy" ;
     dcterms:title "Replace content of the existing dataset" ;
     prov:endedAtTime "2017-08-02T13:52:29+02:00"^^xsd:dateTime ;
     prov:generated attx:workflowingestionwf_activity1_stepreplaceds_UV_outputDataset ;
@@ -55,6 +60,8 @@ attx:workflowingestionwf_activity1_stepreplaceds_UV a attxonto:StepExecution,
     prov:startedAtTime "2017-08-02T13:52:29+02:00"^^xsd:dateTime ;
     prov:used attx:workflowingestionwf_activity1_stepreplaceds_UV_transformerData ;
     prov:wasAssociatedWith attx:UV .
+
+attx:workflowingestionwf_activity1_tempDataset a prov:Role .
 
 attx:UV a attxonto:Artifact,
         prov:Agent .

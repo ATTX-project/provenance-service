@@ -32,18 +32,14 @@ def server(host, port, log, workers):
 
 
 @cli.command('queue')
-@click.option('--address', help='message broker host.')
-@click.option('--user', help='message broker user.')
-@click.option('--password', help='message broker password.')
+@click.option('--address', default=broker['host'], help='message broker host.')
+@click.option('--user', default=broker['user'], help='message broker user.')
+@click.option('--password', default=broker['pass'], help='message broker password.')
 def queue(user, password, address):
     """Task execution with options."""
-    username = broker['user'] if user is None else user
-    key = broker['pass'] if password is None else password
-    host = broker['host'] if address is None else address
-
-    queue = worker.worker(app=init_celery(username, key, host))
+    queue = worker.worker(app=init_celery(user, password, address))
     options = {
-        'broker': 'amqp://{0}:{1}@{2}:5672//'.format(username, key, host),
+        'broker': 'amqp://{0}:{1}@{2}:5672//'.format(user, password, address),
         'loglevel': 'INFO',
         'traceback': True,
     }
@@ -53,7 +49,6 @@ def queue(user, password, address):
 @cli.command('consumer')
 def consumer():
     """Consuming some messages."""
-    # consumer(broker['host'], broker['user'], broker['pass'])
     CONSUMER = Consumer(broker['host'], broker['user'], broker['pass'], broker['queue'])
     CONSUMER.start()
 

@@ -2,10 +2,13 @@ import click
 import unittest
 from prov.app import init_api
 from click.testing import CliRunner
-from prov.provservice import PROVService, number_of_workers
+from prov.provservice import PROVService, number_of_workers, main, consumer
+from mock import patch
+# import mock
+from prov.utils.messaging import Consumer
 
 
-class TestAPIStart(unittest.TestCase):
+class TestService(unittest.TestCase):
     """Test app is ok."""
 
     def setUp(self):
@@ -32,17 +35,30 @@ class TestAPIStart(unittest.TestCase):
         """Test Running from command line."""
         @click.command("server")
         @click.option('--host')
-        def start(host):
+        def server(host):
             click.echo('{0}'.format(host))
 
         runner = CliRunner()
-        result = runner.invoke(start, input=self.host)
+        result = runner.invoke(server, input=self.host)
+        assert not result.exception
+
+    @patch.object(Consumer, 'start')
+    def test_command_consumer(self, mock):
+        """Test Running consumer from command line."""
+        runner = CliRunner()
+        result = runner.invoke(consumer)
         assert not result.exception
 
     def running_app(self):
         """Test running app."""
         response = self.app.get('/')
         self.assertEqual(response.status_code, 404)
+
+    @patch('prov.provservice.cli')
+    def test_cli(self, mock):
+        """Test if cli was called."""
+        main()
+        self.assertTrue(mock.called)
 
 
 if __name__ == "__main__":

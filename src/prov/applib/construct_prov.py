@@ -10,33 +10,34 @@ from prov.utils.broker import broker
 app = init_celery(broker['user'], broker['pass'], broker['host'])
 
 
-@app.task(name="construct.provenance")
+@app.task(name="construct.provenance", max_retries=5)
 def construct_provenance(prov_Object, payload):
     """Parse Provenance Object and construct Provenance Graph."""
     graph = Graph()
     bind_prefix(graph)
-    activityID = ''.join(filter(None, ('activity',
-                                str(prov_Object['context']['activityID']))))
-    workflowID = ''.join(filter(None, ('workflow',
-                                str(prov_Object['context']['workflowID']))))
-    # if an activity does not include step ID it is an WorkflowExecution
-    if prov_Object['context'].get('stepID'):
-        stepID = ''.join(filter(None, ('step',
-                                str(prov_Object['context']['stepID']))))
-    else:
-        stepID = None
-    base_URI = "_".join(filter(None, (workflowID, activityID, stepID)))
-    workflow_base_URI = "{0}_{1}".format(workflowID, activityID)
-    app_logger.info('Constructed base ID: {0}'.format(base_URI))
     try:
+        activityID = ''.join(filter(None, ('activity',
+                                    str(prov_Object['context']['activityID']))))
+        workflowID = ''.join(filter(None, ('workflow',
+                                    str(prov_Object['context']['workflowID']))))
+        # if an activity does not include step ID it is an WorkflowExecution
+        if prov_Object['context'].get('stepID'):
+            stepID = ''.join(filter(None, ('step',
+                                    str(prov_Object['context']['stepID']))))
+        else:
+            stepID = None
+        base_URI = "_".join(filter(None, (workflowID, activityID, stepID)))
+        workflow_base_URI = "{0}_{1}".format(workflowID, activityID)
+        app_logger.info('Constructed base ID: {0}'.format(base_URI))
         if prov_Object['activity']['type'] == "DescribeStepExecution":
-            prov_graph = prov_dataset(graph, base_URI, workflow_base_URI, prov_Object, payload)
+            prov_graph = prov_dataset(graph, base_URI, prov_Object, payload)
         else:
             prov_graph = prov_activity(graph, base_URI, workflow_base_URI, prov_Object, payload)
         store_provenance(prov_graph.serialize(format='turtle'))
         return prov_graph.serialize(format='turtle')
     except Exception as error:
         app_logger.error('Something is wrong with parsing the prov_Object: {0}'.format(error))
+        raise error
 
 
 def store_provenance(graph):
@@ -139,7 +140,6 @@ def prov_communication(graph, activity_URI, workflow_base_URI, base_URI, prov_Ob
         for key in activity['input']:
             communication_entity = URIRef("{0}_{1}".format(key_entity, hashlib.md5(str(key['key'])).hexdigest()))
             graph.add((key_entity, PROV.used, communication_entity))
-            print key
             if key.get('role'):
                 bnode_usage = BNode()
                 receiver_role_URI = create_URI(ATTXBase, workflow_base_URI, key['role'])
@@ -195,20 +195,34 @@ def prov_generation(graph, activity_URI, output_Object, payload):
     return graph
 
 
-def prov_dataset(graph, base_URI, workflow_base_URI, prov_Object, payload):
+def prov_dataset(graph, base_URI, prov_Object, payload):
     """Describe dataset provenance."""
-    output_Object = prov_Object['output']
-    agent_ID = str(prov_Object['agent']['ID'])
-    activity_URI = create_URI(ATTXBase, base_URI, agent_ID)
-    prov_generation(graph, activity_URI, workflow_base_URI, output_Object, payload)
-    for key in output_Object:
-        key_entity = create_URI(ATTXBase, workflow_base_URI, key)
+    if prov_Object.get('output'):
+        output_Object = prov_Object['output']
+        agent_ID = str(prov_Object['agent']['ID'])
+        activity_URI = create_URI(ATTXBase, base_URI, agent_ID)
+        prov_generation(graph, activity_URI, output_Object, payload)
+        describe_dataset(graph, output_Object, activity_URI, payload)
+    if prov_Object.get('input'):
+        input_Object = prov_Object['input']
+        agent_ID = str(prov_Object['agent']['ID'])
+        activity_URI = create_URI(ATTXBase, base_URI, agent_ID)
+        prov_usage(graph, activity_URI, input_Object, payload)
+        describe_dataset(graph, input_Object, activity_URI, payload)
+    return graph
+
+
+def describe_dataset(graph, dataset, activity_URI, payload):
+    """Describe dataset both input and output."""
+    for key in dataset:
+        key_entity = URIRef("{0}_{1}".format(activity_URI, key['key']))
         graph.add((key_entity, RDF.type, ATTXOnto.Dataset))
         graph.add((key_entity, RDF.type, PROV.Entity))
-        if payload.get(key) and type(payload[key]) is dict:
-            graph.add((key_entity, DCTERMS.source, Literal(str(payload[key]))))
-            for value in payload[key]:
-                graph.add((key_entity, create_URI(ATTXBase, value), Literal(str(payload[key][value]))))
-        elif payload.get(key) and type(payload[key]) is str:
-            graph.add((key_entity, DCTERMS.source, Literal(str(payload[key]))))
+        dataset_key = key["key"]
+        if payload.get(dataset_key) and type(payload[dataset_key]) is dict:
+            graph.add((key_entity, DCTERMS.source, Literal(str(payload[dataset_key]))))
+            for value in payload[dataset_key]:
+                graph.add((key_entity, create_URI(ATTXBase, value), Literal(str(payload[dataset_key][value]))))
+        elif payload.get(dataset_key) and type(payload[dataset_key]) is str:
+            graph.add((key_entity, DCTERMS.source, Literal(str(payload[dataset_key]))))
     return graph

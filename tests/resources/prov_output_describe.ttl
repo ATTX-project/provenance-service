@@ -1,0 +1,51 @@
+@prefix attx: <http://data.hulib.helsinki.fi/attx/> .
+@prefix attxonto: <http://data.hulib.helsinki.fi/attx/onto#> .
+@prefix dc: <http://purl.org/dc/elements/1.1/> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix pwo: <http://purl.org/spar/pwo/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <http://schema.org/> .
+@prefix sd: <http://www.w3.org/ns/sparql-service-description#> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+attx:workflowingestionwf_activity1_UV prov:generated attx:workflowingestionwf_activity1_UV_outputDataset,
+        attx:workflowingestionwf_activity1_UV_outputDataset2 ;
+    prov:qualifiedGeneration attx:generated_155a0a0226f3b3adf45e7bfdc872f86b,
+        attx:generated_7b9e078099d96962ae83f608c08d2e96 ;
+    prov:qualifiedUsage attx:used_238d7310e5d052ba188efdf006e00705 ;
+    prov:used attx:workflowingestionwf_activity1_UV_inputDataset .
+
+attx:generated_155a0a0226f3b3adf45e7bfdc872f86b a prov:Generation ;
+    prov:entity attx:workflowingestionwf_activity1_UV_outputDataset2 ;
+    prov:hadRole attx:Dataset .
+
+attx:generated_7b9e078099d96962ae83f608c08d2e96 a prov:Generation ;
+    prov:entity attx:workflowingestionwf_activity1_UV_outputDataset ;
+    prov:hadRole attx:Dataset .
+
+attx:used_238d7310e5d052ba188efdf006e00705 a prov:Usage ;
+    prov:entity attx:workflowingestionwf_activity1_UV_inputDataset ;
+    prov:hadRole attx:Dataset .
+
+attx:workflowingestionwf_activity1_UV_inputDataset a attxonto:Dataset,
+        prov:Entity ;
+    dcterms:source "attx://ds/2" .
+
+attx:workflowingestionwf_activity1_UV_outputDataset a attxonto:Dataset,
+        prov:Entity ;
+    attx:description "" ;
+    attx:license "http://cc/0" ;
+    attx:publisher "UH" ;
+    attx:title "Harvested dataset" ;
+    attx:uri "attx://ds/1" ;
+    dcterms:source "{u'publisher': u'UH', u'description': u'', u'uri': u'attx://ds/1', u'license': u'http://cc/0', u'title': u'Harvested dataset'}" .
+
+attx:workflowingestionwf_activity1_UV_outputDataset2 a attxonto:Dataset,
+        prov:Entity ;
+    dcterms:source "attx://ds/3" .
+
+attx:Dataset a prov:Role .
+

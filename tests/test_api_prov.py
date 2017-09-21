@@ -1,11 +1,19 @@
 import unittest
 # from urllib import quote
 import responses
-# import json
+import json
 # import httpretty
+# import pytest
 import falcon
 from falcon import testing
 from prov.app import init_api
+from mock import patch, Mock
+
+
+class ReturnObject(object):
+    """Return ids instead of celery class."""
+
+    id = 2151
 
 
 class ProvenanceAPITestCase(testing.TestCase):
@@ -30,26 +38,57 @@ class ProvTestCase(ProvenanceAPITestCase):
         self.app
         pass
 
-    # @responses.activate
-    # def test_api_prov(self):
-    #     """Test graph list on graph endpoint."""
-    #     with open('tests/resources/prov_request.json') as datafile:
-    #         graph_data = datafile.read().replace('\n', '')
-    #
-    #     def request_callback(request):
-    #         """Request callback for drop graph."""
-    #         resp_body = graph_data
-    #         headers = {'content-type': "application/json",
-    #                    'cache-control': "no-cache"}
-    #         return (200, headers, json.dumps(resp_body))
-    #
-    #     responses.add_callback(
-    #         responses.POST, "{0}{1}/prov".format(self.api, self.version),
-    #         callback=request_callback,
-    #         content_type='application/json',
-    #     )
-    #     result = self.simulate_post("/{0}/prov".format(self.version), body=graph_data)
-    #     assert(result.status == falcon.HTTP_200)
+    @responses.activate
+    @patch('prov.api.provenance.construct_provenance', autospec=True)
+    def test_api_prov(self, mock):
+        """Test api prov everything ok."""
+        with open('tests/resources/prov_request.json') as datafile:
+            graph_data = datafile.read().replace('\n', '')
+
+        mock.delay.return_value = Mock()
+        response = mock.delay.return_value = ReturnObject()
+        data = {"task_id": response.id}
+
+        def request_callback(request):
+            """Request callback for drop graph."""
+            headers = {'content-type': "application/json",
+                       'cache-control': "no-cache"}
+            return (200, headers, json.dumps(data))
+
+        responses.add_callback(
+            responses.POST, "{0}{1}/prov".format(self.api, self.version),
+            callback=request_callback,
+            content_type='application/json',
+        )
+
+        result = self.simulate_post("/{0}/prov".format(self.version), body=graph_data)
+        assert(result.status == falcon.HTTP_200)
+
+    @responses.activate
+    @patch('prov.api.provenance.construct_provenance', autospec=True)
+    def test_api_prov_array(self, mock):
+        """Test api prov everything ok with array."""
+        with open('tests/resources/prov_request_array.json') as datafile:
+            graph_data = datafile.read().replace('\n', '')
+
+        mock.delay.return_value = Mock()
+        response = mock.delay.return_value = ReturnObject()
+        data = {"task_id": [response.id]}
+
+        def request_callback(request):
+            """Request callback for drop graph."""
+            headers = {'content-type': "application/json",
+                       'cache-control': "no-cache"}
+            return (200, headers, json.dumps(data))
+
+        responses.add_callback(
+            responses.POST, "{0}{1}/prov".format(self.api, self.version),
+            callback=request_callback,
+            content_type='application/json',
+        )
+
+        result = self.simulate_post("/{0}/prov".format(self.version), body=graph_data)
+        assert(result.status == falcon.HTTP_200)
 
     @responses.activate
     def test_api_prov_get(self):

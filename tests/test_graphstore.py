@@ -34,7 +34,7 @@ class GraphTestCase(GraphStoreTest):
     def setUp(self):
         """Set up test fixtures."""
         self.server_address = "http://localhost:3030/$/"
-        self.request_address = "http://localhost:3030/ds/"
+        self.request_address = "http://localhost:3030/ds"
         self.api = "http://localhost:7030/"
         self.version = "0.1"
 
@@ -54,7 +54,7 @@ class GraphTestCase(GraphStoreTest):
             graph_data = json.load(datafile1)
         with open('tests/resources/graph_list_response.json') as datafile2:
             graph_list = json.load(datafile2)
-        responses.add(responses.GET, "{0}sparql?query={1}".format(self.request_address, list_query), json=graph_data, status=200)
+        responses.add(responses.GET, "{0}/sparql?query={1}".format(self.request_address, list_query), json=graph_data, status=200)
         fuseki = GraphStore()
         result = fuseki.graph_list()
         assert(result == graph_list)
@@ -77,7 +77,7 @@ class GraphTestCase(GraphStoreTest):
         with open('tests/resources/graph_list_request.json') as datafile3:
             graph_list = json.load(datafile3)
         responses.add(responses.GET, "{0}stats/{1}".format(self.server_address, "ds"), json=graph_data, status=200)
-        responses.add(responses.GET, "{0}sparql?query={1}".format(self.request_address, list_query), json=graph_list, status=200)
+        responses.add(responses.GET, "{0}/sparql?query={1}".format(self.request_address, list_query), json=graph_list, status=200)
         fuseki = GraphStore()
         result = fuseki.graph_statistics()
         assert(result == graph_stats)
@@ -92,7 +92,7 @@ class GraphTestCase(GraphStoreTest):
     @responses.activate
     def test_graph_retrieve_None(self):
         """Test graph retrieve non-existent graph."""
-        responses.add(responses.GET, "{0}data?graph={1}".format(self.request_address, "http://test.com"), status=404)
+        responses.add(responses.GET, "{0}/data?graph={1}".format(self.request_address, "http://test.com"), status=404)
         fuseki = GraphStore()
         result = fuseki.retrieve_graph("default")
         self.assertIsNone(result)
@@ -103,7 +103,7 @@ class GraphTestCase(GraphStoreTest):
         with open('tests/resources/graph_strategy.ttl') as datafile:
             graph_data = datafile.read()
         url = "http://data.hulib.helsinki.fi/attx/strategy"
-        responses.add(responses.GET, "{0}data?graph={1}".format(self.request_address, url), body=graph_data, status=200)
+        responses.add(responses.GET, "{0}/data?graph={1}".format(self.request_address, url), body=graph_data, status=200)
         fuseki = GraphStore()
         result = fuseki.retrieve_graph("http://data.hulib.helsinki.fi/attx/strategy")
         assert(result == graph_data)
@@ -125,13 +125,12 @@ class GraphTestCase(GraphStoreTest):
 
         def request_callback(request):
             """Request callback for drop graph."""
-            resp_body = response_data
             headers = {'content-type': "application/json",
                        'cache-control': "no-cache"}
-            return (200, headers, json.dumps(resp_body))
+            return (200, headers, json.dumps(response_data))
 
         responses.add_callback(
-            responses.POST, "{0}data?graph={1}".format(self.request_address, url),
+            responses.POST, "{0}/data?graph={1}".format(self.request_address, url),
             callback=request_callback,
             content_type='text/turtle',
         )
@@ -155,13 +154,12 @@ class GraphTestCase(GraphStoreTest):
 
         def request_callback(request):
             """Request callback for drop graph."""
-            resp_body = graph_data
             headers = {'content-type': 'text/html',
                        'cache-control': "no-cache"}
-            return (200, headers, resp_body)
+            return (200, headers, graph_data)
 
         responses.add_callback(
-            responses.POST, "{0}update".format(self.request_address),
+            responses.POST, "{0}/update".format(self.request_address),
             callback=request_callback,
             content_type="application/x-www-form-urlencoded",
         )
@@ -183,7 +181,7 @@ class GraphTestCase(GraphStoreTest):
             graph_data = datafile.read()
         list_query = "select ?g (count(*) as ?count) {graph ?g {?s ?p ?o}} group by ?g"
         url = "http://data.hulib.helsinki.fi/attx/strategy"
-        request_url = "{0}query?default-graph-uri=%s&query={1}&output=xml&results=xml&format=xml".format(self.request_address, url, list_query)
+        request_url = "{0}/query?default-graph-uri=%s&query={1}&output=xml&results=xml&format=xml".format(self.request_address, url, list_query)
         httpretty.register_uri(httpretty.GET, request_url, graph_data, status=200, content_type="application/sparql-results+xml")
         fuseki = GraphStore()
         result = fuseki.graph_sparql(url, list_query)

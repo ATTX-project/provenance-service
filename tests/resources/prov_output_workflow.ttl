@@ -1,0 +1,50 @@
+@prefix attx: <http://data.hulib.helsinki.fi/attx/> .
+@prefix attxonto: <http://data.hulib.helsinki.fi/attx/onto#> .
+@prefix dc: <http://purl.org/dc/elements/1.1/> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix pwo: <http://purl.org/spar/pwo/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <http://schema.org/> .
+@prefix sd: <http://www.w3.org/ns/sparql-service-description#> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+attx:workflowingestionwf_activity1_UV a attxonto:WorkflowExecution,
+        prov:Activity ;
+    dcterms:title "Ingestion workflow" ;
+    prov:generated attx:workflowingestionwf_activity1_UV_outputDataset ;
+    prov:qualifiedAssociation attx:association_8f964bd174e90db0b452e67f98948c42 ;
+    prov:qualifiedGeneration attx:generated_7b9e078099d96962ae83f608c08d2e96 ;
+    prov:qualifiedUsage attx:used_238d7310e5d052ba188efdf006e00705 ;
+    prov:startedAtTime "2017-08-02T13:52:29+02:00"^^xsd:dateTime ;
+    prov:used attx:workflowingestionwf_activity1_UV_inputDataset ;
+    prov:wasAssociatedWith attx:UV .
+
+attx:ETL a prov:Role .
+
+attx:association_8f964bd174e90db0b452e67f98948c42 a prov:Association ;
+    prov:agent attx:UV ;
+    prov:hadPlan attx:workflowingestionwf_activity1 ;
+    prov:hadRole attx:ETL .
+
+attx:generated_7b9e078099d96962ae83f608c08d2e96 a prov:Generation ;
+    prov:entity attx:workflowingestionwf_activity1_UV_outputDataset ;
+    prov:hadRole attx:Dataset .
+
+attx:used_238d7310e5d052ba188efdf006e00705 a prov:Usage ;
+    prov:entity attx:workflowingestionwf_activity1_UV_inputDataset ;
+    prov:hadRole attx:Dataset .
+
+attx:Dataset a prov:Role .
+
+attx:UV a attxonto:Artifact,
+        prov:Agent .
+
+attx:workflowingestionwf_activity1_UV_inputDataset a prov:Entity ;
+    dcterms:source "http://dataset/1" .
+
+attx:workflowingestionwf_activity1_UV_outputDataset a prov:Entity ;
+    dcterms:source "http://dataset/2" .
+

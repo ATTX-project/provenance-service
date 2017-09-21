@@ -16,7 +16,7 @@ class GraphStore(object):
         self.key = os.environ['GKEY'] if 'GKEY' in os.environ else "pw123"
 
         self.server_address = "http://{0}:{1}/$/".format(self.host, self.port)
-        self.request_address = "http://{0}:{1}/{2}/".format(self.host, self.port, self.dataset)
+        self.request_address = "http://{0}:{1}/{2}".format(self.host, self.port, self.dataset)
 
     def graph_health(self):
         """Do the Health check for Graph Store."""
@@ -35,7 +35,7 @@ class GraphStore(object):
         temp_list = []
         list_query = quote("select ?g (count(*) as ?count) {graph ?g {?s ?p ?o}} group by ?g")
         try:
-            request = requests.get("{0}sparql?query={1}".format(self.request_address, list_query))
+            request = requests.get("{0}/sparql?query={1}".format(self.request_address, list_query))
         except Exception as error:
             app_logger.error('Something is wrong: {0}'.format(error))
             raise error
@@ -72,7 +72,7 @@ class GraphStore(object):
     def retrieve_graph(self, named_graph):
         """Retrieve named graph from Graph Store."""
         try:
-            request = requests.get("{0}data?graph={1}".format(self.request_address, named_graph))
+            request = requests.get("{0}/data?graph={1}".format(self.request_address, named_graph))
         except Exception as error:
             app_logger.error('Something is wrong: {0}'.format(error))
             raise error
@@ -85,7 +85,7 @@ class GraphStore(object):
 
     def graph_sparql(self, named_graph, query):
         """Execute SPARQL query on the Graph Store."""
-        store_api = "{0}query".format(self.request_address)
+        store_api = "{0}/query".format(self.request_address)
         try:
             sparql = SPARQLWrapper(store_api)
             # add a default graph, though that can also be in the query string
@@ -103,7 +103,7 @@ class GraphStore(object):
         headers = {'content-type': "text/turtle",
                    'cache-control': "no-cache"}
         try:
-            request = requests.post("{0}data?graph={1}".format(self.request_address, named_graph), data=data, headers=headers)
+            request = requests.post("{0}/data?graph={1}".format(self.request_address, named_graph), data=data, headers=headers)
         except Exception as error:
             app_logger.error('Something is wrong: {0}'.format(error))
             raise error
@@ -117,7 +117,7 @@ class GraphStore(object):
         headers = {'content-type': "application/x-www-form-urlencoded",
                    'cache-control': "no-cache"}
         try:
-            request = requests.post("{0}update".format(self.request_address), data=payload, headers=headers)
+            request = requests.post("{0}/update".format(self.request_address), data=payload, headers=headers)
         except Exception as error:
             app_logger.error('Something is wrong: {0}'.format(error))
             raise error
