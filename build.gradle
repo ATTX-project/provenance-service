@@ -72,7 +72,6 @@ dependencies {
     test 'pypi:pytz:2016.4'
     test 'pypi:httpretty:0.8.14'
     test 'pypi:responses:0.7.0'
-    test 'pypi:pytest-rabbitmq:1.1.1'
 }
 
 repositories {
