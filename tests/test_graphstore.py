@@ -36,7 +36,7 @@ class GraphTestCase(GraphStoreTest):
         self.server_address = "http://localhost:3030/$/"
         self.request_address = "http://localhost:3030/ds"
         self.api = "http://localhost:7030/"
-        self.version = "0.1"
+        self.version = "0.2"
 
     @responses.activate
     def test_ping(self):

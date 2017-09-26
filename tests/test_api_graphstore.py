@@ -16,7 +16,7 @@ class GraphStoreTest(testing.TestCase):
         self.server_address = "http://localhost:3030/$/"
         self.request_address = "http://localhost:3030/ds"
         self.api = "http://localhost:7030/"
-        self.version = "0.1"
+        self.version = "0.2"
         self.app = init_api()
 
     def tearDown(self):

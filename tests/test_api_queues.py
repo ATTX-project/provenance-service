@@ -11,7 +11,7 @@ class QueueAPITestCase(testing.TestCase):
     def setUp(self):
         """Setting the app up."""
         self.api = "http://localhost:7030/"
-        self.version = "0.1"
+        self.version = "0.2"
         self.app = init_api()
 
     def tearDown(self):
