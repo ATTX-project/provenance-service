@@ -5,7 +5,7 @@ from prov.api.provenance import ConstructProvenance, RetrieveProvenance
 from prov.api.queues import RetrieveQueueTask
 from prov.api.graph_endpoint import GraphStatistics, GraphList, GraphResource, GraphSPARQL, GraphUpdate
 
-api_version = "0.1"  # TO DO: Figure out a better way to do versioning
+api_version = "0.2"  # TO DO: Figure out a better way to do versioning
 
 
 def init_api():
