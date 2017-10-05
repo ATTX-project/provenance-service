@@ -14,7 +14,7 @@ class ProvenanceTestCase(unittest.TestCase):
         self.graph = Graph()
         pass
 
-    @patch.object(GraphStore, 'graph_update')
+    @patch.object(GraphStore, 'graph_add')
     def test_store_prov_called(self, mock):
         """Test if store_provenance was called."""
         store_provenance(self.graph)

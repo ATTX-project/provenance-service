@@ -68,6 +68,7 @@ class Consumer(object):
         """Process the message body."""
         try:
             prov = json.loads(message.body)
+            message.ack()
             if isinstance(prov, dict):
                 response = construct_provenance.delay(prov["provenance"], prov["payload"])
                 result = {'task_id': response.id}
@@ -77,7 +78,6 @@ class Consumer(object):
                     response = construct_provenance.delay(obj["provenance"], obj["payload"])
                     tasks.append(response.id)
                 result = {'task_id': tasks}
-            message.ack()
             app_logger.info('Processed provenance message with result {0}.'.format(result))
         except Exception as error:
             app_logger.error('Something went wrong: {0}'.format(error))

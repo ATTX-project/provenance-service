@@ -165,7 +165,6 @@ ENV/
 /build/
 
 activate
-pinned.txt
 
 # Ignore Gradle GUI config
 gradle-app.setting

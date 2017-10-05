@@ -69,7 +69,7 @@ class GraphStore(object):
         app_logger.info('Constructed statistics list for dataset: "/{0}".'.format(self.dataset))
         return result
 
-    def retrieve_graph(self, named_graph):
+    def graph_retrieve(self, named_graph):
         """Retrieve named graph from Graph Store."""
         try:
             request = requests.get("{0}/data?graph={1}".format(self.request_address, named_graph))
@@ -98,7 +98,7 @@ class GraphStore(object):
         app_logger.info('Execture SPARQL query on named graph: {0}.'.format(named_graph))
         return data.toxml()
 
-    def graph_update(self, named_graph, data):
+    def graph_add(self, named_graph, data):
         """Update named graph in Graph Store."""
         headers = {'content-type': "text/turtle",
                    'cache-control': "no-cache"}

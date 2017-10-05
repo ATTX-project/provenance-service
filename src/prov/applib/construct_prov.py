@@ -43,7 +43,7 @@ def construct_provenance(prov_Object, payload):
 def store_provenance(graph):
     """Store resulting provenance in the Graph Store."""
     storage = GraphStore()
-    storage_request = storage.graph_update(ATTXProv, graph)
+    storage_request = storage.graph_add(ATTXProv, graph)
     return storage_request
 
 
