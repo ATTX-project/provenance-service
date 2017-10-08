@@ -42,6 +42,8 @@ def construct_provenance(prov_Object, payload):
 
 def store_provenance(graph):
     """Store resulting provenance in the Graph Store."""
+    # We need to store provenance in a separate graph for each context
+    # And why not in the global Provenance graph
     storage = GraphStore()
     storage_request = storage.graph_add(ATTXProv, graph)
     return storage_request
@@ -59,28 +61,23 @@ def prov_activity(graph, base_URI, workflow_base_URI, prov_Object, payload):
         prov_association(graph, activity_URI, prov_Object, workflow_base_URI)
     else:
         prov_association(graph, activity_URI, prov_Object)
-    if activity.get('title'):
-        graph.add((activity_URI, DCTERMS.title, Literal(activity['title'])))
-    if activity.get('description'):
-        graph.add((activity_URI, DCTERMS.description, Literal(activity['description'])))
+    activity.get('title') and graph.add((activity_URI, DCTERMS.title, Literal(activity['title'])))
+    activity.get('description') and graph.add((activity_URI, DCTERMS.description, Literal(activity['description'])))
     prov_time(graph, activity_URI, prov_Object)
-    if activity.get('communication'):
-        prov_communication(graph, activity_URI, workflow_base_URI, base_URI, prov_Object)
-    if prov_Object.get('input'):
-        prov_usage(graph, activity_URI, prov_Object['input'], payload)
-    if prov_Object.get('output'):
-        prov_generation(graph, activity_URI, prov_Object['output'], payload)
+    activity.get('communication') and prov_communication(graph, activity_URI, workflow_base_URI, base_URI, prov_Object)
+    prov_Object.get('input') and prov_usage(graph, activity_URI, prov_Object['input'], payload)
+    prov_Object.get('output') and prov_generation(graph, activity_URI, prov_Object['output'], payload)
     app_logger.info('Constructed provenance for Activity with URI: attx:{0}.' .format(base_URI))
+    # The return is not really needed
     return graph
 
 
 def prov_time(graph, activity_URI, prov_Object):
     """Figure out start and end times."""
     activity = prov_Object['activity']
-    if activity.get('startTime'):
-        graph.add((activity_URI, PROV.startedAtTime, Literal(activity['startTime'], datatype=XSD.dateTime)))
-    if activity.get('endTime'):
-        graph.add((activity_URI, PROV.endedAtTime, Literal(activity['endTime'], datatype=XSD.dateTime)))
+    activity.get('startTime') and graph.add((activity_URI, PROV.startedAtTime, Literal(activity['startTime'], datatype=XSD.dateTime)))
+    activity.get('endTime') and graph.add((activity_URI, PROV.endedAtTime, Literal(activity['endTime'], datatype=XSD.dateTime)))
+    # The return is not really needed
     return graph
 
 
@@ -105,6 +102,7 @@ def prov_association(graph, activity_URI, prov_Object, workflow_base_URI=None):
     graph.add((agent_URI, RDF.type, ATTXOnto.Artifact))
     # information about the Role
     graph.add((role_URI, RDF.type, PROV.Role))
+    # The return is not really needed
     return graph
 
 
@@ -114,6 +112,7 @@ def prov_workflow(graph, activity_URI, workflow_base_URI):
     graph.add((workflowURI, RDF.type, PROV.Plan))
     graph.add((workflowURI, RDF.type, ATTXOnto.Workflow))
     graph.add((workflowURI, PWO.hasStep, activity_URI))
+    # The return is not really needed
     return graph
 
 
@@ -150,6 +149,7 @@ def prov_communication(graph, activity_URI, workflow_base_URI, base_URI, prov_Ob
                 graph.add((receiver_role_URI, RDF.type, PROV.Role))
 
             # graph.add((communication_entity, RDF.type, PROV.Entity))
+    # The return is not really needed
     return graph
 
 
@@ -169,8 +169,8 @@ def prov_usage(graph, activity_URI, input_Object, payload):
             graph.add((role_URI, RDF.type, PROV.Role))
 
         graph.add((key_entity, RDF.type, PROV.Entity))
-        if payload.get(key['key']):
-            graph.add((key_entity, DCTERMS.source, Literal(str(payload[key['key']]))))
+        payload.get(key['key']) and graph.add((key_entity, DCTERMS.source, Literal(str(payload[key['key']]))))
+    # The return is not really needed
     return graph
 
 
@@ -190,8 +190,8 @@ def prov_generation(graph, activity_URI, output_Object, payload):
             graph.add((role_URI, RDF.type, PROV.Role))
 
         graph.add((key_entity, RDF.type, PROV.Entity))
-        if payload.get(key['key']):
-            graph.add((key_entity, DCTERMS.source, Literal(str(payload[key['key']]))))
+        payload.get(key['key']) and graph.add((key_entity, DCTERMS.source, Literal(str(payload[key['key']]))))
+    # The return is not really needed
     return graph
 
 
@@ -209,6 +209,7 @@ def prov_dataset(graph, base_URI, prov_Object, payload):
         activity_URI = create_URI(ATTXBase, base_URI, agent_ID)
         prov_usage(graph, activity_URI, input_Object, payload)
         describe_dataset(graph, input_Object, activity_URI, payload)
+    # The return is not really needed
     return graph
 
 
@@ -225,4 +226,5 @@ def describe_dataset(graph, dataset, activity_URI, payload):
                 graph.add((key_entity, create_URI(ATTXBase, value), Literal(str(payload[dataset_key][value]))))
         elif payload.get(dataset_key) and type(payload[dataset_key]) is str:
             graph.add((key_entity, DCTERMS.source, Literal(str(payload[dataset_key]))))
+    # The return is not really needed
     return graph
