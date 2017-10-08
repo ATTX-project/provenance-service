@@ -38,7 +38,7 @@ class GraphStore(object):
             request = requests.get("{0}/sparql?query={1}".format(self.request_address, list_query))
         except Exception as error:
             app_logger.error('Something is wrong: {0}'.format(error))
-            raise error
+            raise
         graphs = request.json()
         result['graphsCount'] = len(graphs['results']['bindings'])
         for g in graphs['results']['bindings']:
@@ -55,7 +55,7 @@ class GraphStore(object):
             request = requests.get("{0}stats/{1}".format(self.server_address, self.dataset), auth=('admin', self.key))
         except Exception as error:
             app_logger.error('Something is wrong: {0}'.format(error))
-            raise error
+            raise
         stats = request.json()
         result['dataset'] = "/{0}".format(self.dataset)
         result['requests'] = {}
@@ -75,7 +75,7 @@ class GraphStore(object):
             request = requests.get("{0}/data?graph={1}".format(self.request_address, named_graph))
         except Exception as error:
             app_logger.error('Something is wrong: {0}'.format(error))
-            raise error
+            raise
         if request.status_code == 200:
             app_logger.info('Retrived named graph: {0}.'.format(named_graph))
             return request.text
@@ -94,7 +94,7 @@ class GraphStore(object):
             data = sparql.query().convert()
         except Exception as error:
             app_logger.error('Something is wrong: {0}'.format(error))
-            raise error
+            raise
         app_logger.info('Execture SPARQL query on named graph: {0}.'.format(named_graph))
         return data.toxml()
 
@@ -106,7 +106,7 @@ class GraphStore(object):
             request = requests.post("{0}/data?graph={1}".format(self.request_address, named_graph), data=data, headers=headers)
         except Exception as error:
             app_logger.error('Something is wrong: {0}'.format(error))
-            raise error
+            raise
         app_logger.info('Updated named graph: {0}.'.format(named_graph))
         return request.json()
 
