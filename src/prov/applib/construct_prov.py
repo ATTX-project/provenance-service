@@ -33,11 +33,12 @@ def construct_provenance(prov_Object, payload):
             prov_graph = prov_dataset(graph, base_URI, prov_Object, payload)
         else:
             prov_graph = prov_activity(graph, base_URI, workflow_base_URI, prov_Object, payload)
+        store_provenance(prov_graph.serialize(format='turtle'))
     except Exception as error:
         app_logger.error('Something is wrong with parsing the prov_Object: {0}'.format(error))
-        raise error
+        # raise error
+        return error.message
     else:
-        store_provenance(prov_graph.serialize(format='turtle'))
         return prov_graph.serialize(format='turtle')
 
 
@@ -46,12 +47,8 @@ def store_provenance(graph):
     # We need to store provenance in a separate graph for each context
     # And why not in the global Provenance graph
     storage = GraphStore()
-    try:
-        storage_request = storage.graph_add(ATTXProv, graph)
-    except Exception as error:
-        app_logger.error('Something went wrong when storing provenance: {0}'.format(error))
-    else:
-        return storage_request
+    storage_request = storage.graph_add(ATTXProv, graph)
+    return storage_request
 
 
 def prov_activity(graph, base_URI, workflow_base_URI, prov_Object, payload):

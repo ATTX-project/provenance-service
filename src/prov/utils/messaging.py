@@ -4,6 +4,8 @@ import amqpstorm
 from amqpstorm import Connection
 from prov.utils.logs import app_logger
 from prov.applib.construct_prov import construct_provenance
+from prov.utils.validate import valid_message
+from prov.schemas import load_schema
 
 
 class Consumer(object):
@@ -64,21 +66,27 @@ class Consumer(object):
                 self.connection.close()
                 break
 
+    @valid_message(load_schema('provschema'), load_schema('altprovschema'))
+    def handle_message(self, message):
+        """Handle provenance message."""
+        prov = json.loads(message.body)
+        if isinstance(prov, dict):
+            response = construct_provenance.delay(prov["provenance"], prov["payload"])
+            result = {'task_id': response.id}
+        elif isinstance(prov, list):
+            tasks = []
+            for obj in prov:
+                response = construct_provenance.delay(obj["provenance"], obj["payload"])
+                tasks.append(response.id)
+            result = {'task_id': tasks}
+        app_logger.info('Processed provenance message with result {0}.'.format(result))
+
     def __call__(self, message):
         """Process the message body."""
         try:
-            prov = json.loads(message.body)
-            if isinstance(prov, dict):
-                response = construct_provenance.delay(prov["provenance"], prov["payload"])
-                result = {'task_id': response.id}
-            elif isinstance(prov, list):
-                tasks = []
-                for obj in prov:
-                    response = construct_provenance.delay(obj["provenance"], obj["payload"])
-                    tasks.append(response.id)
-                result = {'task_id': tasks}
-            app_logger.info('Processed provenance message with result {0}.'.format(result))
+            self.handle_message(message)
         except Exception as error:
             app_logger.error('Something went wrong: {0}'.format(error))
+            message.reject(requeue=False)
         else:
             message.ack()
