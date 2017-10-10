@@ -36,8 +36,8 @@ def construct_provenance(prov_Object, payload):
         store_provenance(prov_graph.serialize(format='turtle'))
     except Exception as error:
         app_logger.error('Something is wrong with parsing the prov_Object: {0}'.format(error))
-        # raise error
-        return error.message
+        raise error
+        # return error.message
     else:
         return prov_graph.serialize(format='turtle')
 
