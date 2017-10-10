@@ -4,6 +4,8 @@ import amqpstorm
 from amqpstorm import Connection
 from prov.utils.logs import app_logger
 from prov.applib.construct_prov import construct_provenance
+from prov.utils.validate import valid_message
+from prov.schemas import load_schema
 
 
 class Consumer(object):
@@ -64,11 +66,11 @@ class Consumer(object):
                 self.connection.close()
                 break
 
-    def __call__(self, message):
-        """Process the message body."""
+    @valid_message(load_schema('provschema'), load_schema('altprovschema'))
+    def handle_message(self, message):
+        """Handle provenance message."""
+        prov = json.loads(message.body)
         try:
-            prov = json.loads(message.body)
-            message.ack()
             if isinstance(prov, dict):
                 response = construct_provenance.delay(prov["provenance"], prov["payload"])
                 result = {'task_id': response.id}
@@ -81,3 +83,13 @@ class Consumer(object):
             app_logger.info('Processed provenance message with result {0}.'.format(result))
         except Exception as error:
             app_logger.error('Something went wrong: {0}'.format(error))
+
+    def __call__(self, message):
+        """Process the message body."""
+        try:
+            self.handle_message(message)
+        except Exception as error:
+            app_logger.error('Something went wrong: {0}'.format(error))
+            message.reject(requeue=False)
+        else:
+            message.ack()
