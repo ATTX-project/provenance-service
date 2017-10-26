@@ -47,6 +47,7 @@ attx:workflowingestionwf_activity1_stepreplaceds_GMAPI a prov:Activity ;
 
 attx:workflowingestionwf_activity1_stepreplaceds_UV a attxonto:StepExecution,
         prov:Activity ;
+    attxonto:hasStatus "SUCCESS" ;
     dcterms:description "something peachy" ;
     dcterms:title "Replace content of the existing dataset" ;
     prov:endedAtTime "2017-08-02T13:52:29+02:00"^^xsd:dateTime ;
