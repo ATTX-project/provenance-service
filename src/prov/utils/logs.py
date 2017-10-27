@@ -26,7 +26,7 @@ config = {
             'level': 'INFO',
             'formatter': 'theFormatter',
             'class': 'logging.FileHandler',
-            'filename': 'api.log',
+            'filename': 'logs/service.log',
             'mode': 'a+'
         },
         'consoleHandler': {
