@@ -66,6 +66,7 @@ def prov_activity(graph, base_URI, workflow_base_URI, prov_Object, payload):
     activity.get('title') and graph.add((activity_URI, DCTERMS.title, Literal(activity['title'])))
     activity.get('description') and graph.add((activity_URI, DCTERMS.description, Literal(activity['description'])))
     activity.get('status') and graph.add((activity_URI, ATTXOnto.hasStatus, Literal(activity['status'])))
+    activity.get('configuration') and graph.add((activity_URI, ATTXOnto.hasConfig, Literal(activity['configuration'])))
     prov_time(graph, activity_URI, prov_Object)
     activity.get('communication') and prov_communication(graph, activity_URI, workflow_base_URI, base_URI, prov_Object)
     prov_Object.get('input') and prov_usage(graph, activity_URI, prov_Object['input'], payload)
