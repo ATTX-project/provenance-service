@@ -3,7 +3,7 @@ from rdflib import Graph, BNode, Literal, URIRef
 from rdflib.namespace import RDF, DCTERMS, XSD
 from prov.utils.prefixes import bind_prefix, create_URI, ATTXProv, PROV, ATTXBase, ATTXOnto, PWO
 from prov.utils.logs import app_logger
-from prov.utils.graph_store import GraphStore
+from prov.applib.graph_store import GraphStore
 from prov.utils.queue import init_celery
 from prov.utils.broker import broker
 

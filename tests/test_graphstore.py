@@ -8,7 +8,7 @@ import json
 import httpretty
 from falcon import testing
 from prov.app import init_api
-from prov.utils.graph_store import GraphStore
+from prov.applib.graph_store import GraphStore
 
 
 class GraphStoreTest(testing.TestCase):

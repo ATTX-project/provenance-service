@@ -3,7 +3,7 @@ import multiprocessing
 import gunicorn.app.base
 from prov.app import init_api
 from prov.utils.queue import init_celery
-from prov.utils.messaging import Consumer
+from prov.applib.messaging import Consumer
 from prov.utils.broker import broker
 from celery.bin import worker
 from gunicorn.six import iteritems

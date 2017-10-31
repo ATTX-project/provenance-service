@@ -5,7 +5,7 @@ from click.testing import CliRunner
 from prov.provservice import PROVService, number_of_workers, main, consumer
 from mock import patch
 # import mock
-from prov.utils.messaging import Consumer
+from prov.applib.messaging import Consumer
 
 
 class TestService(unittest.TestCase):

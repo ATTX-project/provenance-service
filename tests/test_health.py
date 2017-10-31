@@ -4,7 +4,7 @@ import httpretty
 import json
 from falcon import testing
 from prov.app import init_api
-from prov.utils.graph_store import GraphStore
+from prov.applib.graph_store import GraphStore
 from prov.api.healthcheck import healthcheck_response
 from mock import patch
 

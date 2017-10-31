@@ -1,7 +1,7 @@
 import unittest
 # from rdflib import Graph
 from mock import patch
-from prov.utils.messaging import Consumer
+from prov.applib.messaging import Consumer
 # from amqpstorm import Connection
 # from amqpstorm.tests.utility import FakeConnection
 # from amqpstorm import Channel

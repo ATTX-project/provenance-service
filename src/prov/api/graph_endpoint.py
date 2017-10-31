@@ -3,7 +3,7 @@ import falcon
 from prov.schemas import load_schema
 from prov.utils.validate import validate
 from prov.utils.logs import app_logger
-from prov.utils.graph_store import GraphStore
+from prov.applib.graph_store import GraphStore
 
 
 class GraphStatistics(object):

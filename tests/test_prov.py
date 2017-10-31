@@ -3,7 +3,7 @@ import unittest
 from rdflib import Graph
 from prov.applib.construct_prov import construct_provenance, store_provenance
 from mock import patch
-from prov.utils.graph_store import GraphStore
+from prov.applib.graph_store import GraphStore
 
 
 class ProvenanceTestCase(unittest.TestCase):
