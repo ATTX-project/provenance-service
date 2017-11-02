@@ -63,14 +63,21 @@ def prov_activity(graph, base_URI, workflow_base_URI, prov_Object, payload):
         prov_association(graph, activity_URI, prov_Object, workflow_base_URI)
     else:
         prov_association(graph, activity_URI, prov_Object)
-    activity.get('title') and graph.add((activity_URI, DCTERMS.title, Literal(activity['title'])))
-    activity.get('description') and graph.add((activity_URI, DCTERMS.description, Literal(activity['description'])))
-    activity.get('status') and graph.add((activity_URI, ATTXOnto.hasStatus, Literal(activity['status'])))
-    activity.get('configuration') and graph.add((activity_URI, ATTXOnto.hasConfig, Literal(activity['configuration'])))
+    if activity.get('title'):
+        graph.add((activity_URI, DCTERMS.title, Literal(activity['title'])))
+    if activity.get('description'):
+        graph.add((activity_URI, DCTERMS.description, Literal(activity['description'])))
+    if activity.get('status'):
+        graph.add((activity_URI, ATTXOnto.hasStatus, Literal(activity['status'])))
+    if activity.get('configuration'):
+        graph.add((activity_URI, ATTXOnto.hasConfig, Literal(activity['configuration'])))
     prov_time(graph, activity_URI, prov_Object)
-    activity.get('communication') and prov_communication(graph, activity_URI, workflow_base_URI, base_URI, prov_Object)
-    prov_Object.get('input') and prov_usage(graph, activity_URI, prov_Object['input'], payload)
-    prov_Object.get('output') and prov_generation(graph, activity_URI, prov_Object['output'], payload)
+    if activity.get('communication'):
+        prov_communication(graph, activity_URI, workflow_base_URI, base_URI, prov_Object)
+    if prov_Object.get('input'):
+        prov_usage(graph, activity_URI, prov_Object['input'], payload)
+    if prov_Object.get('output'):
+        prov_generation(graph, activity_URI, prov_Object['output'], payload)
     app_logger.info('Constructed provenance for Activity with URI: attx:{0}.' .format(base_URI))
     # The return is not really needed
     return graph
@@ -79,8 +86,10 @@ def prov_activity(graph, base_URI, workflow_base_URI, prov_Object, payload):
 def prov_time(graph, activity_URI, prov_Object):
     """Figure out start and end times."""
     activity = prov_Object['activity']
-    activity.get('startTime') and graph.add((activity_URI, PROV.startedAtTime, Literal(activity['startTime'], datatype=XSD.dateTime)))
-    activity.get('endTime') and graph.add((activity_URI, PROV.endedAtTime, Literal(activity['endTime'], datatype=XSD.dateTime)))
+    if activity.get('startTime'):
+        graph.add((activity_URI, PROV.startedAtTime, Literal(activity['startTime'], datatype=XSD.dateTime)))
+    if activity.get('endTime'):
+        graph.add((activity_URI, PROV.endedAtTime, Literal(activity['endTime'], datatype=XSD.dateTime)))
     # The return is not really needed
     return graph
 
@@ -173,7 +182,8 @@ def prov_usage(graph, activity_URI, input_Object, payload):
             graph.add((role_URI, RDF.type, PROV.Role))
 
         graph.add((key_entity, RDF.type, PROV.Entity))
-        payload.get(key['key']) and graph.add((key_entity, DCTERMS.source, Literal(str(payload[key['key']]))))
+        if payload.get(key['key']):
+            graph.add((key_entity, DCTERMS.source, Literal(str(payload[key['key']]))))
     # The return is not really needed
     return graph
 
@@ -194,7 +204,8 @@ def prov_generation(graph, activity_URI, output_Object, payload):
             graph.add((role_URI, RDF.type, PROV.Role))
 
         graph.add((key_entity, RDF.type, PROV.Entity))
-        payload.get(key['key']) and graph.add((key_entity, DCTERMS.source, Literal(str(payload[key['key']]))))
+        if payload.get(key['key']):
+            graph.add((key_entity, DCTERMS.source, Literal(str(payload[key['key']]))))
     # The return is not really needed
     return graph
 
