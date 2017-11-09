@@ -1,5 +1,5 @@
 import requests
-import os
+from os import environ
 from urllib import quote
 from prov.utils.logs import app_logger
 from SPARQLWrapper import SPARQLWrapper
@@ -11,10 +11,10 @@ class GraphStore(object):
 
     def __init__(self):
         """Check if we have everything to work with the Graph Store."""
-        self.host = os.environ['GHOST'] if 'GHOST' in os.environ else "localhost"
-        self.port = os.environ['GPORT'] if 'GPORT' in os.environ else "3030"
-        self.dataset = os.environ['DS'] if 'DS' in os.environ else "ds"
-        self.key = os.environ['GKEY'] if 'GKEY' in os.environ else "pw123"
+        self.host = environ['GHOST'] if 'GHOST' in environ else "localhost"
+        self.port = environ['GPORT'] if 'GPORT' in environ else "3030"
+        self.dataset = environ['DS'] if 'DS' in environ else "ds"
+        self.key = environ['GKEY'] if 'GKEY' in environ else "pw123"
 
         self.server_address = "http://{0}:{1}/$/".format(self.host, self.port)
         self.request_address = "http://{0}:{1}/{2}".format(self.host, self.port, self.dataset)

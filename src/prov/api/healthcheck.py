@@ -2,8 +2,6 @@ import json
 import falcon
 from prov.utils.logs import app_logger
 from prov.applib.graph_store import GraphStore
-# from amqpstorm.management import ApiConnectionError
-# from amqpstorm.management import ApiError
 from amqpstorm.management import ManagementApi
 from prov.utils.broker import broker
 
