@@ -35,24 +35,24 @@ class GraphResource(object):
 
     def on_get(self, req, resp):
         """Execution of the GET named graph request."""
-        graphURI = req.get_param('uri')
+        graph_uri = req.get_param('uri')
         fuseki = GraphStore()
-        response = fuseki._graph_retrieve(graphURI)
+        response = fuseki._graph_retrieve(graph_uri)
         if response is not None:
             resp.data = str(response)
             resp.content_type = 'text/turtle'
-            app_logger.info('Retrieved: {0}.'.format(graphURI))
+            app_logger.info('Retrieved: {0}.'.format(graph_uri))
             resp.status = falcon.HTTP_200
         else:
             raise falcon.HTTPGone()
 
     def on_delete(self, req, resp):
         """Execution of the DELETE named graph request."""
-        graphURI = req.get_param('uri')
+        graph_uri = req.get_param('uri')
         fuseki = GraphStore()
-        fuseki._drop_graph(graphURI)
+        fuseki._drop_graph(graph_uri)
         resp.content_type = 'plain/text'
-        app_logger.info('Deleted/DELETE graph with URI: {0}.'.format(graphURI))
+        app_logger.info('Deleted/DELETE graph with URI: {0}.'.format(graph_uri))
         resp.status = falcon.HTTP_200
 
 

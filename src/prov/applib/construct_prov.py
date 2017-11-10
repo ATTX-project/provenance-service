@@ -66,8 +66,8 @@ class Provenance(object):
     def _prov_activity(self, base_uri, wf_base_uri):
         """Construct Activity provenance Graph."""
         activity = self.prov_object['activity']
-        agent_ID = str(self.prov_object['agent']['ID'])
-        act_uri = create_uri(ATTXBase, base_uri, agent_ID)
+        agent_id = str(self.prov_object['agent']['ID'])
+        act_uri = create_uri(ATTXBase, base_uri, agent_id)
         self.graph.add((act_uri, RDF.type, PROV.Activity))
         if activity.get('type'):
             self.graph.add((act_uri, RDF.type,
@@ -108,32 +108,32 @@ class Provenance(object):
         """Associate an activity with an Agent."""
         agent = self.prov_object['agent']
         agent_URI = create_uri(ATTXBase, agent['ID'])
-        role_URI = create_uri(ATTXBase, agent['role'])
-        association_URI = create_uri(ATTXBase, "association", md5(str(agent_URI + role_URI + self.prov_object['activity']['type'])).hexdigest())
+        role_uri = create_uri(ATTXBase, agent['role'])
+        association_uri = create_uri(ATTXBase, "association", md5(str(agent_URI + role_uri + self.prov_object['activity']['type'])).hexdigest())
 
         self.graph.add((act_uri, PROV.wasAssociatedWith, agent_URI))
-        self.graph.add((act_uri, PROV.qualifiedAssociation, association_URI))
-        self.graph.add((association_URI, RDF.type, PROV.Association))
-        self.graph.add((association_URI, PROV.agent, agent_URI))
-        self.graph.add((association_URI, PROV.hadRole, role_URI))
+        self.graph.add((act_uri, PROV.qualifiedAssociation, association_uri))
+        self.graph.add((association_uri, RDF.type, PROV.Association))
+        self.graph.add((association_uri, PROV.agent, agent_URI))
+        self.graph.add((association_uri, PROV.hadRole, role_uri))
         if self.prov_object['activity']['type'] == 'WorkflowExecution':
-            self.graph.add((association_URI, PROV.hadPlan, create_uri(ATTXBase, wf_base_uri)))
+            self.graph.add((association_uri, PROV.hadPlan, create_uri(ATTXBase, wf_base_uri)))
         if wf_base_uri and self.prov_object['context'].get('stepID') and self.prov_object['activity']['type'] == 'StepExecution':
             self._prov_workflow(act_uri, wf_base_uri)
         # information about the agent and the artifact used.
         self.graph.add((agent_URI, RDF.type, PROV.Agent))
         self.graph.add((agent_URI, RDF.type, ATTXOnto.Artifact))
         # information about the Role
-        self.graph.add((role_URI, RDF.type, PROV.Role))
+        self.graph.add((role_uri, RDF.type, PROV.Role))
         # The return is not really needed
         # return graph
 
     def _prov_workflow(self, act_uri, wf_base_uri):
         """Generate provenance related workflow."""
-        workflowURI = create_uri(ATTXBase, wf_base_uri)
-        self.graph.add((workflowURI, RDF.type, PROV.Plan))
-        self.graph.add((workflowURI, RDF.type, ATTXOnto.Workflow))
-        self.graph.add((workflowURI, PWO.hasStep, act_uri))
+        workflow_uri = create_uri(ATTXBase, wf_base_uri)
+        self.graph.add((workflow_uri, RDF.type, PROV.Plan))
+        self.graph.add((workflow_uri, RDF.type, ATTXOnto.Workflow))
+        self.graph.add((workflow_uri, PWO.hasStep, act_uri))
         # The return is not really needed
         # return graph
 
@@ -143,31 +143,31 @@ class Provenance(object):
         communication = self.prov_object['activity']['communication']
         for activity in communication:
             key_entity = create_uri(ATTXBase, base_uri, activity['agent'])
-            sender_role_URI = create_uri(ATTXBase, activity['role'])
-            sender_agent_URI = create_uri(ATTXBase, activity['agent'])
+            sender_role_uri = create_uri(ATTXBase, activity['role'])
+            sender_agent_uri = create_uri(ATTXBase, activity['agent'])
 
             self.graph.add((act_uri, PROV.qualifiedCommunication, bnode))
             self.graph.add((bnode, RDF.type, PROV.Communication))
             self.graph.add((bnode, PROV.activity, key_entity))
-            self.graph.add((bnode, PROV.hadRole, sender_role_URI))
+            self.graph.add((bnode, PROV.hadRole, sender_role_uri))
             # information about the agent and the artifact used.
             self.graph.add((key_entity, RDF.type, PROV.Activity))
-            self.graph.add((key_entity, PROV.wasAssociatedWith, sender_agent_URI))
-            self.graph.add((sender_agent_URI, RDF.type, PROV.Agent))
-            self.graph.add((sender_agent_URI, RDF.type, ATTXOnto.Artifact))
+            self.graph.add((key_entity, PROV.wasAssociatedWith, sender_agent_uri))
+            self.graph.add((sender_agent_uri, RDF.type, PROV.Agent))
+            self.graph.add((sender_agent_uri, RDF.type, ATTXOnto.Artifact))
             # information about the Role
-            self.graph.add((sender_role_URI, RDF.type, PROV.Role))
+            self.graph.add((sender_role_uri, RDF.type, PROV.Role))
             for key in activity['input']:
                 communication_entity = URIRef("{0}_{1}".format(key_entity, md5(str(key['key'])).hexdigest()))
                 self.graph.add((key_entity, PROV.used, communication_entity))
                 if key.get('role'):
                     bnode_usage = BNode()
-                    receiver_role_URI = create_uri(ATTXBase, wf_base_uri, key['role'])
+                    receiver_role_uri = create_uri(ATTXBase, wf_base_uri, key['role'])
                     self.graph.add((key_entity, PROV.qualifiedUsage, bnode_usage))
                     self.graph.add((bnode_usage, RDF.type, PROV.Usage))
                     self.graph.add((bnode_usage, PROV.entity, communication_entity))
-                    self.graph.add((bnode_usage, PROV.hadRole, receiver_role_URI))
-                    self.graph.add((receiver_role_URI, RDF.type, PROV.Role))
+                    self.graph.add((bnode_usage, PROV.hadRole, receiver_role_uri))
+                    self.graph.add((receiver_role_uri, RDF.type, PROV.Role))
 
                 # graph.add((communication_entity, RDF.type, PROV.Entity))
         # The return is not really needed
@@ -180,13 +180,13 @@ class Provenance(object):
             key_entity = URIRef("{0}_{1}".format(act_uri, key['key']))
             self.graph.add((act_uri, PROV.used, key_entity))
             if key.get('role'):
-                role_URI = create_uri(ATTXBase, key['role'])
-                usage_URI = create_uri(ATTXBase, "used", md5(str(key['key'] + role_URI)).hexdigest())
-                self.graph.add((act_uri, PROV.qualifiedUsage, usage_URI))
-                self.graph.add((usage_URI, RDF.type, PROV.Usage))
-                self.graph.add((usage_URI, PROV.entity, key_entity))
-                self.graph.add((usage_URI, PROV.hadRole, role_URI))
-                self.graph.add((role_URI, RDF.type, PROV.Role))
+                role_uri = create_uri(ATTXBase, key['role'])
+                usage_uri = create_uri(ATTXBase, "used", md5(str(key['key'] + role_uri)).hexdigest())
+                self.graph.add((act_uri, PROV.qualifiedUsage, usage_uri))
+                self.graph.add((usage_uri, RDF.type, PROV.Usage))
+                self.graph.add((usage_uri, PROV.entity, key_entity))
+                self.graph.add((usage_uri, PROV.hadRole, role_uri))
+                self.graph.add((role_uri, RDF.type, PROV.Role))
 
             self.graph.add((key_entity, RDF.type, PROV.Entity))
             if self.payload.get(key['key']):
@@ -201,13 +201,13 @@ class Provenance(object):
             key_entity = URIRef("{0}_{1}".format(act_uri, key['key']))
             self.graph.add((act_uri, PROV.generated, key_entity))
             if key.get('role'):
-                role_URI = create_uri(ATTXBase, key['role'])
-                generation_URI = create_uri(ATTXBase, "generated", md5(str(key['key'] + role_URI)).hexdigest())
-                self.graph.add((act_uri, PROV.qualifiedGeneration, generation_URI))
-                self.graph.add((generation_URI, RDF.type, PROV.Generation))
-                self.graph.add((generation_URI, PROV.entity, key_entity))
-                self.graph.add((generation_URI, PROV.hadRole, role_URI))
-                self.graph.add((role_URI, RDF.type, PROV.Role))
+                role_uri = create_uri(ATTXBase, key['role'])
+                generation_uri = create_uri(ATTXBase, "generated", md5(str(key['key'] + role_uri)).hexdigest())
+                self.graph.add((act_uri, PROV.qualifiedGeneration, generation_uri))
+                self.graph.add((generation_uri, RDF.type, PROV.Generation))
+                self.graph.add((generation_uri, PROV.entity, key_entity))
+                self.graph.add((generation_uri, PROV.hadRole, role_uri))
+                self.graph.add((role_uri, RDF.type, PROV.Role))
 
             self.graph.add((key_entity, RDF.type, PROV.Entity))
             if self.payload.get(key['key']):
@@ -219,14 +219,14 @@ class Provenance(object):
         """Describe dataset provenance."""
         if self.prov_object.get('output'):
             output_object = self.prov_object['output']
-            agent_ID = str(self.prov_object['agent']['ID'])
-            act_uri = create_uri(ATTXBase, base_uri, agent_ID)
+            agent_id = str(self.prov_object['agent']['ID'])
+            act_uri = create_uri(ATTXBase, base_uri, agent_id)
             self._prov_generation(act_uri, output_object)
             self._describe_dataset(output_object, act_uri)
         if self.prov_object.get('input'):
             input_object = self.prov_object['input']
-            agent_ID = str(self.prov_object['agent']['ID'])
-            act_uri = create_uri(ATTXBase, base_uri, agent_ID)
+            agent_id = str(self.prov_object['agent']['ID'])
+            act_uri = create_uri(ATTXBase, base_uri, agent_id)
             self._prov_usage(act_uri, input_object)
             self._describe_dataset(input_object, act_uri)
         # The return is not really needed
