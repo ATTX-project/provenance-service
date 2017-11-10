@@ -44,10 +44,10 @@ class Provenance(object):
             wf_base_uri = "{0}_{1}".format(workflow_id, activity_id)
             app_logger.info('Constructed base ID: {0}'.format(base_uri))
             if self.prov_object['activity']['type'] == "DescribeStepExecution":
-                prov_graph = self.prov_dataset(base_uri)
+                prov_graph = self._prov_dataset(base_uri)
             else:
-                prov_graph = self.prov_activity(base_uri, wf_base_uri)
-            self.store_provenance(prov_graph.serialize(format='turtle'))
+                prov_graph = self._prov_activity(base_uri, wf_base_uri)
+            self._store_provenance(prov_graph.serialize(format='turtle'))
         except Exception as error:
             app_logger.error('Something is wrong with parsing the prov_object: {0}'.format(error))
             raise error
@@ -55,7 +55,7 @@ class Provenance(object):
         else:
             return prov_graph.serialize(format='turtle')
 
-    def store_provenance(self):
+    def _store_provenance(self):
         """Store resulting provenance in the Graph Store."""
         # We need to store provenance in a separate graph for each context
         # And why not in the global Provenance graph
@@ -63,7 +63,7 @@ class Provenance(object):
         storage_request = storage._graph_add(ATTXProv, self.graph)
         return storage_request
 
-    def prov_activity(self, base_uri, wf_base_uri):
+    def _prov_activity(self, base_uri, wf_base_uri):
         """Construct Activity provenance Graph."""
         activity = self.prov_object['activity']
         agent_ID = str(self.prov_object['agent']['ID'])
@@ -72,9 +72,9 @@ class Provenance(object):
         if activity.get('type'):
             self.graph.add((act_uri, RDF.type,
                             create_uri(ATTXOnto, activity['type'])))
-            self.prov_association(act_uri, wf_base_uri)
+            self._prov_association(act_uri, wf_base_uri)
         else:
-            self.prov_association(act_uri)
+            self._prov_association(act_uri)
         if activity.get('title'):
             self.graph.add((act_uri, DCTERMS.title, Literal(activity['title'])))
         if activity.get('description'):
@@ -83,18 +83,18 @@ class Provenance(object):
             self.graph.add((act_uri, ATTXOnto.hasStatus, Literal(activity['status'])))
         if activity.get('configuration'):
             self.graph.add((act_uri, ATTXOnto.hasConfig, Literal(activity['configuration'])))
-        self.prov_time(act_uri)
+        self._prov_time(act_uri)
         if activity.get('communication'):
-            self.prov_communication(act_uri, wf_base_uri, base_uri)
+            self._prov_communication(act_uri, wf_base_uri, base_uri)
         if self.prov_object.get('input'):
-            self.prov_usage(act_uri, self.prov_object['input'])
+            self._prov_usage(act_uri, self.prov_object['input'])
         if self.prov_object.get('output'):
-            self.prov_generation(act_uri, self.prov_object['output'])
+            self._prov_generation(act_uri, self.prov_object['output'])
         app_logger.info('Constructed provenance for Activity with URI: attx:{0}.' .format(base_uri))
         # The return is not really needed
         # return graph
 
-    def prov_time(self, act_uri):
+    def _prov_time(self, act_uri):
         """Figure out start and end times."""
         activity = self.prov_object['activity']
         if activity.get('startTime'):
@@ -104,7 +104,7 @@ class Provenance(object):
         # The return is not really needed
         # return graph
 
-    def prov_association(self, act_uri, wf_base_uri=None):
+    def _prov_association(self, act_uri, wf_base_uri=None):
         """Associate an activity with an Agent."""
         agent = self.prov_object['agent']
         agent_URI = create_uri(ATTXBase, agent['ID'])
@@ -119,7 +119,7 @@ class Provenance(object):
         if self.prov_object['activity']['type'] == 'WorkflowExecution':
             self.graph.add((association_URI, PROV.hadPlan, create_uri(ATTXBase, wf_base_uri)))
         if wf_base_uri and self.prov_object['context'].get('stepID') and self.prov_object['activity']['type'] == 'StepExecution':
-            self.prov_workflow(act_uri, wf_base_uri)
+            self._prov_workflow(act_uri, wf_base_uri)
         # information about the agent and the artifact used.
         self.graph.add((agent_URI, RDF.type, PROV.Agent))
         self.graph.add((agent_URI, RDF.type, ATTXOnto.Artifact))
@@ -128,7 +128,7 @@ class Provenance(object):
         # The return is not really needed
         # return graph
 
-    def prov_workflow(self, act_uri, wf_base_uri):
+    def _prov_workflow(self, act_uri, wf_base_uri):
         """Generate provenance related workflow."""
         workflowURI = create_uri(ATTXBase, wf_base_uri)
         self.graph.add((workflowURI, RDF.type, PROV.Plan))
@@ -137,7 +137,7 @@ class Provenance(object):
         # The return is not really needed
         # return graph
 
-    def prov_communication(self, act_uri, wf_base_uri, base_uri):
+    def _prov_communication(self, act_uri, wf_base_uri, base_uri):
         """Communication of an activity with another activity."""
         bnode = BNode()
         communication = self.prov_object['activity']['communication']
@@ -173,7 +173,7 @@ class Provenance(object):
         # The return is not really needed
         # return graph
 
-    def prov_usage(self, act_uri, input_object):
+    def _prov_usage(self, act_uri, input_object):
         """Create qualified Usage if possible."""
         # bnode = BNode()
         for key in input_object:
@@ -194,7 +194,7 @@ class Provenance(object):
         # The return is not really needed
         # return graph
 
-    def prov_generation(self, act_uri, output_object):
+    def _prov_generation(self, act_uri, output_object):
         """Create qualified Usage if possible."""
         # bnode = BNode()
         for key in output_object:
@@ -215,24 +215,24 @@ class Provenance(object):
         # The return is not really needed
         # return graph
 
-    def prov_dataset(self, base_uri):
+    def _prov_dataset(self, base_uri):
         """Describe dataset provenance."""
         if self.prov_object.get('output'):
             output_object = self.prov_object['output']
             agent_ID = str(self.prov_object['agent']['ID'])
             act_uri = create_uri(ATTXBase, base_uri, agent_ID)
-            self.prov_generation(act_uri, output_object)
-            self.describe_dataset(output_object, act_uri)
+            self._prov_generation(act_uri, output_object)
+            self._describe_dataset(output_object, act_uri)
         if self.prov_object.get('input'):
             input_object = self.prov_object['input']
             agent_ID = str(self.prov_object['agent']['ID'])
             act_uri = create_uri(ATTXBase, base_uri, agent_ID)
-            self.prov_usage(act_uri, input_object)
-            self.describe_dataset(input_object, act_uri)
+            self._prov_usage(act_uri, input_object)
+            self._describe_dataset(input_object, act_uri)
         # The return is not really needed
         # return graph
 
-    def describe_dataset(self, dataset, act_uri):
+    def _describe_dataset(self, dataset, act_uri):
         """Describe dataset both input and output."""
         for key in dataset:
             key_entity = URIRef("{0}_{1}".format(act_uri, key['key']))
