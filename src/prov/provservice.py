@@ -49,8 +49,8 @@ def queue(user, password, address):
 @cli.command('consumer')
 def consumer():
     """Consuming some messages."""
-    CONSUMER = Consumer(broker['host'], broker['user'], broker['pass'], broker['queue'])
-    CONSUMER.start()
+    consumer_init = Consumer(broker['host'], broker['user'], broker['pass'], broker['queue'])
+    consumer_init.start()
 
 
 class PROVService(gunicorn.app.base.BaseApplication):
@@ -76,7 +76,7 @@ class PROVService(gunicorn.app.base.BaseApplication):
 
 # Unless really needed to scale use this function. Otherwise 2 workers suffice.
 def number_of_workers():
-    """Establish the numberb or workers based on cpu_count."""
+    """Establish the number or workers based on cpu_count."""
     return (multiprocessing.cpu_count() * 2) + 1
 
 

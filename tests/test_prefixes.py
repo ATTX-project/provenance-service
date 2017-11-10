@@ -1,6 +1,6 @@
 import unittest
 from rdflib import Graph, URIRef
-from prov.utils.prefixes import bind_prefix, ATTXBase, create_URI
+from prov.utils.prefixes import bind_prefix, ATTXBase, create_uri
 
 
 class PrefixTestCase(unittest.TestCase):
@@ -22,12 +22,12 @@ class PrefixTestCase(unittest.TestCase):
 
     def test_create_URI_2vars(self):
         """Test creating an URI with 2 variables."""
-        test_uri = create_URI(ATTXBase, "test")
+        test_uri = create_uri(ATTXBase, "test")
         assert(test_uri == URIRef("{0}{1}".format(ATTXBase, "test")))
 
     def test_create_URI_3vars(self):
         """Test creating an URI with 3 variables."""
-        test_uri = create_URI(ATTXBase, "test", "add")
+        test_uri = create_uri(ATTXBase, "test", "add")
         assert(test_uri == URIRef("{0}{1}_{2}".format(ATTXBase, "test", "add")))
 
 

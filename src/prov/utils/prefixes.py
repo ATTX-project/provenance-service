@@ -28,7 +28,7 @@ def bind_prefix(graph):
     return graph
 
 
-def create_URI(namespace, string, connector=None):
+def create_uri(namespace, string, connector=None):
     """Add prefix to a certain string."""
     if connector:
         return URIRef("{0}{1}_{2}".format(namespace, string, connector))

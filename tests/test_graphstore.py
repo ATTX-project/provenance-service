@@ -43,7 +43,7 @@ class GraphTestCase(GraphStoreTest):
         """Test_ping on graph endpoint."""
         responses.add(responses.GET, "http://localhost:3030/{0}/ping".format("$"), "2017-09-18T11:41:19.915+00:00", status=200)
         fuseki = GraphStore()
-        result = fuseki.graph_health()
+        result = fuseki._graph_health()
         self.assertTrue(result)
 
     @responses.activate
@@ -56,7 +56,7 @@ class GraphTestCase(GraphStoreTest):
             graph_list = json.load(datafile2)
         responses.add(responses.GET, "{0}/sparql?query={1}".format(self.request_address, list_query), json=graph_data, status=200)
         fuseki = GraphStore()
-        result = fuseki.graph_list()
+        result = fuseki._graph_list()
         assert(result == graph_list)
 
     @responses.activate
@@ -64,7 +64,7 @@ class GraphTestCase(GraphStoreTest):
         """Test ConnectionError graph list on graph endpoint."""
         fuseki = GraphStore()
         with self.assertRaises(ConnectionError):
-            fuseki.graph_list()
+            fuseki._graph_list()
 
     @responses.activate
     def test_graph_stats(self):
@@ -79,7 +79,7 @@ class GraphTestCase(GraphStoreTest):
         responses.add(responses.GET, "{0}stats/{1}".format(self.server_address, "ds"), json=graph_data, status=200)
         responses.add(responses.GET, "{0}/sparql?query={1}".format(self.request_address, list_query), json=graph_list, status=200)
         fuseki = GraphStore()
-        result = fuseki.graph_statistics()
+        result = fuseki._graph_statistics()
         assert(result == graph_stats)
 
     @responses.activate
@@ -87,14 +87,14 @@ class GraphTestCase(GraphStoreTest):
         """Test ConnectionError graph stats on graph endpoint."""
         fuseki = GraphStore()
         with self.assertRaises(ConnectionError):
-            fuseki.graph_statistics()
+            fuseki._graph_statistics()
 
     @responses.activate
     def test_graph_retrieve_None(self):
         """Test graph retrieve non-existent graph."""
         responses.add(responses.GET, "{0}/data?graph={1}".format(self.request_address, "http://test.com"), status=404)
         fuseki = GraphStore()
-        result = fuseki.graph_retrieve("default")
+        result = fuseki._graph_retrieve("default")
         self.assertIsNone(result)
 
     @responses.activate
@@ -105,7 +105,7 @@ class GraphTestCase(GraphStoreTest):
         url = "http://data.hulib.helsinki.fi/attx/strategy"
         responses.add(responses.GET, "{0}/data?graph={1}".format(self.request_address, url), body=graph_data, status=200)
         fuseki = GraphStore()
-        result = fuseki.graph_retrieve("http://data.hulib.helsinki.fi/attx/strategy")
+        result = fuseki._graph_retrieve("http://data.hulib.helsinki.fi/attx/strategy")
         assert(result == graph_data)
 
     @responses.activate
@@ -113,7 +113,7 @@ class GraphTestCase(GraphStoreTest):
         """Test ConnectionError graph retrieve on graph endpoint."""
         fuseki = GraphStore()
         with self.assertRaises(ConnectionError):
-            fuseki.graph_retrieve("default")
+            fuseki._graph_retrieve("default")
 
     @responses.activate
     def test_graph_add(self):
@@ -135,7 +135,7 @@ class GraphTestCase(GraphStoreTest):
             content_type='text/turtle',
         )
         fuseki = GraphStore()
-        result = fuseki.graph_add(url, graph_data)
+        result = fuseki._graph_add(url, graph_data)
         assert(result == response_data)
 
     @responses.activate
@@ -143,7 +143,7 @@ class GraphTestCase(GraphStoreTest):
         """Test ConnectionError graph update on graph endpoint."""
         fuseki = GraphStore()
         with self.assertRaises(ConnectionError):
-            fuseki.graph_add("default", "")
+            fuseki._graph_add("default", "")
 
     @responses.activate
     def test_graph_drop(self):
@@ -164,7 +164,7 @@ class GraphTestCase(GraphStoreTest):
             content_type="application/x-www-form-urlencoded",
         )
         fuseki = GraphStore()
-        result = fuseki.drop_graph(url)
+        result = fuseki._drop_graph(url)
         assert(result == graph_data)
 
     @responses.activate
@@ -172,7 +172,7 @@ class GraphTestCase(GraphStoreTest):
         """Test ConnectionError graph drop on graph endpoint."""
         fuseki = GraphStore()
         with self.assertRaises(ConnectionError):
-            fuseki.drop_graph("default")
+            fuseki._drop_graph("default")
 
     @httpretty.activate
     def test_graph_sparql(self):
@@ -184,7 +184,7 @@ class GraphTestCase(GraphStoreTest):
         request_url = "{0}/query?default-graph-uri=%s&query={1}&output=xml&results=xml&format=xml".format(self.request_address, url, list_query)
         httpretty.register_uri(httpretty.GET, request_url, graph_data, status=200, content_type="application/sparql-results+xml")
         fuseki = GraphStore()
-        result = fuseki.graph_sparql(url, list_query)
+        result = fuseki._graph_sparql(url, list_query)
         assert(result == graph_data)
 
     @responses.activate
@@ -193,7 +193,7 @@ class GraphTestCase(GraphStoreTest):
         list_query = quote("select ?g (count(*) as ?count) {graph ?g {?s ?p ?o}} group by ?g")
         fuseki = GraphStore()
         with self.assertRaises(URLError):
-            fuseki.graph_sparql("default", list_query)
+            fuseki._graph_sparql("default", list_query)
 
 
 if __name__ == "__main__":

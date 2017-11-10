@@ -39,7 +39,7 @@ class ProvTestCase(ProvenanceAPITestCase):
         pass
 
     @responses.activate
-    @patch('prov.api.provenance.construct_provenance', autospec=True)
+    @patch('prov.api.provenance.prov_task', autospec=True)
     def test_api_prov(self, mock):
         """Test api prov everything ok."""
         with open('tests/resources/prov_request.json') as datafile:
@@ -65,7 +65,7 @@ class ProvTestCase(ProvenanceAPITestCase):
         assert(result.status == falcon.HTTP_200)
 
     @responses.activate
-    @patch('prov.api.provenance.construct_provenance', autospec=True)
+    @patch('prov.api.provenance.prov_task', autospec=True)
     def test_api_prov_array(self, mock):
         """Test api prov everything ok with array."""
         with open('tests/resources/prov_request_array.json') as datafile:
