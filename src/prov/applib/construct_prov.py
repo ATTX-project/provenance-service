@@ -44,23 +44,24 @@ class Provenance(object):
             wf_base_uri = "{0}_{1}".format(workflow_id, activity_id)
             app_logger.info('Constructed base ID: {0}'.format(base_uri))
             if self.prov_object['activity']['type'] == "DescribeStepExecution":
-                prov_graph = self._prov_dataset(base_uri)
+                self._prov_dataset(base_uri)
             else:
-                prov_graph = self._prov_activity(base_uri, wf_base_uri)
-            self._store_provenance(prov_graph.serialize(format='turtle'))
+                self._prov_activity(base_uri, wf_base_uri)
+            self._store_provenance()
         except Exception as error:
             app_logger.error('Something is wrong with parsing the prov_object: {0}'.format(error))
             raise error
             # return error.message
         else:
-            return prov_graph.serialize(format='turtle')
+            return self.graph.serialize(format='turtle')
 
     def _store_provenance(self):
         """Store resulting provenance in the Graph Store."""
         # We need to store provenance in a separate graph for each context
         # And why not in the global Provenance graph
+        print self.graph.serialize(format='turtle')
         storage = GraphStore()
-        storage_request = storage._graph_add(ATTXProv, self.graph)
+        storage_request = storage._graph_add(ATTXProv, self.graph.serialize(format='turtle'))
         return storage_request
 
     def _prov_activity(self, base_uri, wf_base_uri):
@@ -92,7 +93,7 @@ class Provenance(object):
             self._prov_generation(act_uri, self.prov_object['output'])
         app_logger.info('Constructed provenance for Activity with URI: attx:{0}.' .format(base_uri))
         # The return is not really needed
-        # return graph
+        # return self.graph
 
     def _prov_time(self, act_uri):
         """Figure out start and end times."""
@@ -102,7 +103,7 @@ class Provenance(object):
         if activity.get('endTime'):
             self.graph.add((act_uri, PROV.endedAtTime, Literal(activity['endTime'], datatype=XSD.dateTime)))
         # The return is not really needed
-        # return graph
+        # return self.graph
 
     def _prov_association(self, act_uri, wf_base_uri=None):
         """Associate an activity with an Agent."""
@@ -126,7 +127,7 @@ class Provenance(object):
         # information about the Role
         self.graph.add((role_uri, RDF.type, PROV.Role))
         # The return is not really needed
-        # return graph
+        # return self.graph
 
     def _prov_workflow(self, act_uri, wf_base_uri):
         """Generate provenance related workflow."""
@@ -135,7 +136,7 @@ class Provenance(object):
         self.graph.add((workflow_uri, RDF.type, ATTXOnto.Workflow))
         self.graph.add((workflow_uri, PWO.hasStep, act_uri))
         # The return is not really needed
-        # return graph
+        # return self.graph
 
     def _prov_communication(self, act_uri, wf_base_uri, base_uri):
         """Communication of an activity with another activity."""
@@ -171,7 +172,7 @@ class Provenance(object):
 
                 # graph.add((communication_entity, RDF.type, PROV.Entity))
         # The return is not really needed
-        # return graph
+        # return self.graph
 
     def _prov_usage(self, act_uri, input_object):
         """Create qualified Usage if possible."""
@@ -192,7 +193,7 @@ class Provenance(object):
             if self.payload.get(key['key']):
                 self.graph.add((key_entity, DCTERMS.source, Literal(str(self.payload[key['key']]))))
         # The return is not really needed
-        # return graph
+        # return self.graph
 
     def _prov_generation(self, act_uri, output_object):
         """Create qualified Usage if possible."""
@@ -213,7 +214,7 @@ class Provenance(object):
             if self.payload.get(key['key']):
                 self.graph.add((key_entity, DCTERMS.source, Literal(str(self.payload[key['key']]))))
         # The return is not really needed
-        # return graph
+        # return self.graph
 
     def _prov_dataset(self, base_uri):
         """Describe dataset provenance."""
@@ -230,7 +231,7 @@ class Provenance(object):
             self._prov_usage(act_uri, input_object)
             self._describe_dataset(input_object, act_uri)
         # The return is not really needed
-        # return graph
+        # return self.graph
 
     def _describe_dataset(self, dataset, act_uri):
         """Describe dataset both input and output."""
@@ -246,4 +247,4 @@ class Provenance(object):
             elif self.payload.get(dataset_key) and type(self.payload[dataset_key]) is str:
                 self.graph.add((key_entity, DCTERMS.source, Literal(str(self.payload[dataset_key]))))
         # The return is not really needed
-        # return graph
+        # return self.graph

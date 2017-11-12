@@ -2,11 +2,7 @@ import unittest
 # from rdflib import Graph
 from mock import patch
 from prov.applib.messaging import Consumer
-# from amqpstorm import Connection
-# from amqpstorm.tests.utility import FakeConnection
-# from amqpstorm import Channel
-# from pytest_rabbitmq import factories
-#
+
 # rabbitmq_my_proc = factories.rabbitmq_proc(port=5672, logsdir='/tmp')
 # rabbitmq_my = factories.rabbitmq('rabbitmq_my_proc')
 
