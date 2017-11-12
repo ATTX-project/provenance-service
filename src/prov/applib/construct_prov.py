@@ -1,7 +1,7 @@
-import hashlib
+from hashlib import md5
 from rdflib import Graph, BNode, Literal, URIRef
 from rdflib.namespace import RDF, DCTERMS, XSD
-from prov.utils.prefixes import bind_prefix, create_URI, ATTXProv, PROV, ATTXBase, ATTXOnto, PWO
+from prov.utils.prefixes import bind_prefix, create_uri, ATTXProv, PROV, ATTXBase, ATTXOnto, PWO
 from prov.utils.logs import app_logger
 from prov.applib.graph_store import GraphStore
 from prov.utils.queue import init_celery
@@ -11,235 +11,240 @@ app = init_celery(broker['user'], broker['pass'], broker['host'])
 
 
 @app.task(name="construct.provenance", max_retries=5)
-def construct_provenance(prov_Object, payload):
+def prov_task(prov_object, payload):
     """Parse Provenance Object and construct Provenance Graph."""
-    graph = Graph()
-    bind_prefix(graph)
-    try:
-        activityID = ''.join(filter(None, ('activity',
-                                    str(prov_Object['context']['activityID']))))
-        workflowID = ''.join(filter(None, ('workflow',
-                                    str(prov_Object['context']['workflowID']))))
-        # if an activity does not include step ID it is an WorkflowExecution
-        if prov_Object['context'].get('stepID'):
-            stepID = ''.join(filter(None, ('step',
-                                    str(prov_Object['context']['stepID']))))
+    prov = Provenance(prov_object, payload)
+    prov._construct_provenance()
+
+
+class Provenance(object):
+    """Provenance Object class."""
+
+    def __init__(self, prov_object, payload):
+        """Initalize provenance class."""
+        self.graph = Graph()
+        self.prov_object = prov_object
+        self.payload = payload
+
+    def _construct_provenance(self):
+        """Parse Provenance Object and construct Provenance Graph."""
+        bind_prefix(self.graph)
+        try:
+            activity_id = ''.join(filter(None, ('activity',
+                                         str(self.prov_object['context']['activityID']))))
+            workflow_id = ''.join(filter(None, ('workflow',
+                                         str(self.prov_object['context']['workflowID']))))
+            # if an activity does not include step ID it is an WorkflowExecution
+            if self.prov_object['context'].get('stepID'):
+                step_id = ''.join(filter(None, ('step',
+                                         str(self.prov_object['context']['stepID']))))
+            else:
+                step_id = None
+            base_uri = "_".join(filter(None, (workflow_id, activity_id, step_id)))
+            wf_base_uri = "{0}_{1}".format(workflow_id, activity_id)
+            app_logger.info('Constructed base ID: {0}'.format(base_uri))
+            if self.prov_object['activity']['type'] == "DescribeStepExecution":
+                self._prov_dataset(base_uri)
+            else:
+                self._prov_activity(base_uri, wf_base_uri)
+            self._store_provenance()
+        except Exception as error:
+            app_logger.error('Something is wrong with parsing the prov_object: {0}'.format(error))
+            raise error
+            # return error.message
         else:
-            stepID = None
-        base_URI = "_".join(filter(None, (workflowID, activityID, stepID)))
-        workflow_base_URI = "{0}_{1}".format(workflowID, activityID)
-        app_logger.info('Constructed base ID: {0}'.format(base_URI))
-        if prov_Object['activity']['type'] == "DescribeStepExecution":
-            prov_graph = prov_dataset(graph, base_URI, prov_Object, payload)
+            return self.graph.serialize(format='turtle')
+
+    def _store_provenance(self):
+        """Store resulting provenance in the Graph Store."""
+        # We need to store provenance in a separate graph for each context
+        # And why not in the global Provenance graph
+        print self.graph.serialize(format='turtle')
+        storage = GraphStore()
+        storage_request = storage._graph_add(ATTXProv, self.graph.serialize(format='turtle'))
+        return storage_request
+
+    def _prov_activity(self, base_uri, wf_base_uri):
+        """Construct Activity provenance Graph."""
+        activity = self.prov_object['activity']
+        agent_id = str(self.prov_object['agent']['ID'])
+        act_uri = create_uri(ATTXBase, base_uri, agent_id)
+        self.graph.add((act_uri, RDF.type, PROV.Activity))
+        if activity.get('type'):
+            self.graph.add((act_uri, RDF.type,
+                            create_uri(ATTXOnto, activity['type'])))
+            self._prov_association(act_uri, wf_base_uri)
         else:
-            prov_graph = prov_activity(graph, base_URI, workflow_base_URI, prov_Object, payload)
-        store_provenance(prov_graph.serialize(format='turtle'))
-    except Exception as error:
-        app_logger.error('Something is wrong with parsing the prov_Object: {0}'.format(error))
-        raise error
-        # return error.message
-    else:
-        return prov_graph.serialize(format='turtle')
+            self._prov_association(act_uri)
+        if activity.get('title'):
+            self.graph.add((act_uri, DCTERMS.title, Literal(activity['title'])))
+        if activity.get('description'):
+            self.graph.add((act_uri, DCTERMS.description, Literal(activity['description'])))
+        if activity.get('status'):
+            self.graph.add((act_uri, ATTXOnto.hasStatus, Literal(activity['status'])))
+        if activity.get('configuration'):
+            self.graph.add((act_uri, ATTXOnto.hasConfig, Literal(activity['configuration'])))
+        self._prov_time(act_uri)
+        if activity.get('communication'):
+            self._prov_communication(act_uri, wf_base_uri, base_uri)
+        if self.prov_object.get('input'):
+            self._prov_usage(act_uri, self.prov_object['input'])
+        if self.prov_object.get('output'):
+            self._prov_generation(act_uri, self.prov_object['output'])
+        app_logger.info('Constructed provenance for Activity with URI: attx:{0}.' .format(base_uri))
+        # The return is not really needed
+        # return self.graph
 
+    def _prov_time(self, act_uri):
+        """Figure out start and end times."""
+        activity = self.prov_object['activity']
+        if activity.get('startTime'):
+            self.graph.add((act_uri, PROV.startedAtTime, Literal(activity['startTime'], datatype=XSD.dateTime)))
+        if activity.get('endTime'):
+            self.graph.add((act_uri, PROV.endedAtTime, Literal(activity['endTime'], datatype=XSD.dateTime)))
+        # The return is not really needed
+        # return self.graph
 
-def store_provenance(graph):
-    """Store resulting provenance in the Graph Store."""
-    # We need to store provenance in a separate graph for each context
-    # And why not in the global Provenance graph
-    storage = GraphStore()
-    storage_request = storage.graph_add(ATTXProv, graph)
-    return storage_request
+    def _prov_association(self, act_uri, wf_base_uri=None):
+        """Associate an activity with an Agent."""
+        agent = self.prov_object['agent']
+        agent_URI = create_uri(ATTXBase, agent['ID'])
+        role_uri = create_uri(ATTXBase, agent['role'])
+        association_uri = create_uri(ATTXBase, "association", md5(str(agent_URI + role_uri + self.prov_object['activity']['type'])).hexdigest())
 
-
-def prov_activity(graph, base_URI, workflow_base_URI, prov_Object, payload):
-    """Construct Activity provenance Graph."""
-    activity = prov_Object['activity']
-    agent_ID = str(prov_Object['agent']['ID'])
-    activity_URI = create_URI(ATTXBase, base_URI, agent_ID)
-    graph.add((activity_URI, RDF.type, PROV.Activity))
-    if activity.get('type'):
-        graph.add((activity_URI, RDF.type,
-                   create_URI(ATTXOnto, activity['type'])))
-        prov_association(graph, activity_URI, prov_Object, workflow_base_URI)
-    else:
-        prov_association(graph, activity_URI, prov_Object)
-    if activity.get('title'):
-        graph.add((activity_URI, DCTERMS.title, Literal(activity['title'])))
-    if activity.get('description'):
-        graph.add((activity_URI, DCTERMS.description, Literal(activity['description'])))
-    if activity.get('status'):
-        graph.add((activity_URI, ATTXOnto.hasStatus, Literal(activity['status'])))
-    if activity.get('configuration'):
-        graph.add((activity_URI, ATTXOnto.hasConfig, Literal(activity['configuration'])))
-    prov_time(graph, activity_URI, prov_Object)
-    if activity.get('communication'):
-        prov_communication(graph, activity_URI, workflow_base_URI, base_URI, prov_Object)
-    if prov_Object.get('input'):
-        prov_usage(graph, activity_URI, prov_Object['input'], payload)
-    if prov_Object.get('output'):
-        prov_generation(graph, activity_URI, prov_Object['output'], payload)
-    app_logger.info('Constructed provenance for Activity with URI: attx:{0}.' .format(base_URI))
-    # The return is not really needed
-    return graph
-
-
-def prov_time(graph, activity_URI, prov_Object):
-    """Figure out start and end times."""
-    activity = prov_Object['activity']
-    if activity.get('startTime'):
-        graph.add((activity_URI, PROV.startedAtTime, Literal(activity['startTime'], datatype=XSD.dateTime)))
-    if activity.get('endTime'):
-        graph.add((activity_URI, PROV.endedAtTime, Literal(activity['endTime'], datatype=XSD.dateTime)))
-    # The return is not really needed
-    return graph
-
-
-def prov_association(graph, activity_URI, prov_Object, workflow_base_URI=None):
-    """Associate an activity with an Agent."""
-    agent = prov_Object['agent']
-    agent_URI = create_URI(ATTXBase, agent['ID'])
-    role_URI = create_URI(ATTXBase, agent['role'])
-    association_URI = create_URI(ATTXBase, "association", hashlib.md5(str(agent_URI + role_URI + prov_Object['activity']['type'])).hexdigest())
-
-    graph.add((activity_URI, PROV.wasAssociatedWith, agent_URI))
-    graph.add((activity_URI, PROV.qualifiedAssociation, association_URI))
-    graph.add((association_URI, RDF.type, PROV.Association))
-    graph.add((association_URI, PROV.agent, agent_URI))
-    graph.add((association_URI, PROV.hadRole, role_URI))
-    if prov_Object['activity']['type'] == 'WorkflowExecution':
-        graph.add((association_URI, PROV.hadPlan, create_URI(ATTXBase, workflow_base_URI)))
-    if workflow_base_URI and prov_Object['context'].get('stepID') and prov_Object['activity']['type'] == 'StepExecution':
-        prov_workflow(graph, activity_URI, workflow_base_URI)
-    # information about the agent and the artifact used.
-    graph.add((agent_URI, RDF.type, PROV.Agent))
-    graph.add((agent_URI, RDF.type, ATTXOnto.Artifact))
-    # information about the Role
-    graph.add((role_URI, RDF.type, PROV.Role))
-    # The return is not really needed
-    return graph
-
-
-def prov_workflow(graph, activity_URI, workflow_base_URI):
-    """Generate provenance related workflow."""
-    workflowURI = create_URI(ATTXBase, workflow_base_URI)
-    graph.add((workflowURI, RDF.type, PROV.Plan))
-    graph.add((workflowURI, RDF.type, ATTXOnto.Workflow))
-    graph.add((workflowURI, PWO.hasStep, activity_URI))
-    # The return is not really needed
-    return graph
-
-
-def prov_communication(graph, activity_URI, workflow_base_URI, base_URI, prov_Object):
-    """Communication of an activity with another activity."""
-    bnode = BNode()
-    communication = prov_Object['activity']['communication']
-    for activity in communication:
-        key_entity = create_URI(ATTXBase, base_URI, activity['agent'])
-        sender_role_URI = create_URI(ATTXBase, activity['role'])
-        sender_agent_URI = create_URI(ATTXBase, activity['agent'])
-
-        graph.add((activity_URI, PROV.qualifiedCommunication, bnode))
-        graph.add((bnode, RDF.type, PROV.Communication))
-        graph.add((bnode, PROV.activity, key_entity))
-        graph.add((bnode, PROV.hadRole, sender_role_URI))
+        self.graph.add((act_uri, PROV.wasAssociatedWith, agent_URI))
+        self.graph.add((act_uri, PROV.qualifiedAssociation, association_uri))
+        self.graph.add((association_uri, RDF.type, PROV.Association))
+        self.graph.add((association_uri, PROV.agent, agent_URI))
+        self.graph.add((association_uri, PROV.hadRole, role_uri))
+        if self.prov_object['activity']['type'] == 'WorkflowExecution':
+            self.graph.add((association_uri, PROV.hadPlan, create_uri(ATTXBase, wf_base_uri)))
+        if wf_base_uri and self.prov_object['context'].get('stepID') and self.prov_object['activity']['type'] == 'StepExecution':
+            self._prov_workflow(act_uri, wf_base_uri)
         # information about the agent and the artifact used.
-        graph.add((key_entity, RDF.type, PROV.Activity))
-        graph.add((key_entity, PROV.wasAssociatedWith, sender_agent_URI))
-        graph.add((sender_agent_URI, RDF.type, PROV.Agent))
-        graph.add((sender_agent_URI, RDF.type, ATTXOnto.Artifact))
+        self.graph.add((agent_URI, RDF.type, PROV.Agent))
+        self.graph.add((agent_URI, RDF.type, ATTXOnto.Artifact))
         # information about the Role
-        graph.add((sender_role_URI, RDF.type, PROV.Role))
-        for key in activity['input']:
-            communication_entity = URIRef("{0}_{1}".format(key_entity, hashlib.md5(str(key['key'])).hexdigest()))
-            graph.add((key_entity, PROV.used, communication_entity))
+        self.graph.add((role_uri, RDF.type, PROV.Role))
+        # The return is not really needed
+        # return self.graph
+
+    def _prov_workflow(self, act_uri, wf_base_uri):
+        """Generate provenance related workflow."""
+        workflow_uri = create_uri(ATTXBase, wf_base_uri)
+        self.graph.add((workflow_uri, RDF.type, PROV.Plan))
+        self.graph.add((workflow_uri, RDF.type, ATTXOnto.Workflow))
+        self.graph.add((workflow_uri, PWO.hasStep, act_uri))
+        # The return is not really needed
+        # return self.graph
+
+    def _prov_communication(self, act_uri, wf_base_uri, base_uri):
+        """Communication of an activity with another activity."""
+        bnode = BNode()
+        communication = self.prov_object['activity']['communication']
+        for activity in communication:
+            key_entity = create_uri(ATTXBase, base_uri, activity['agent'])
+            sender_role_uri = create_uri(ATTXBase, activity['role'])
+            sender_agent_uri = create_uri(ATTXBase, activity['agent'])
+
+            self.graph.add((act_uri, PROV.qualifiedCommunication, bnode))
+            self.graph.add((bnode, RDF.type, PROV.Communication))
+            self.graph.add((bnode, PROV.activity, key_entity))
+            self.graph.add((bnode, PROV.hadRole, sender_role_uri))
+            # information about the agent and the artifact used.
+            self.graph.add((key_entity, RDF.type, PROV.Activity))
+            self.graph.add((key_entity, PROV.wasAssociatedWith, sender_agent_uri))
+            self.graph.add((sender_agent_uri, RDF.type, PROV.Agent))
+            self.graph.add((sender_agent_uri, RDF.type, ATTXOnto.Artifact))
+            # information about the Role
+            self.graph.add((sender_role_uri, RDF.type, PROV.Role))
+            for key in activity['input']:
+                communication_entity = URIRef("{0}_{1}".format(key_entity, md5(str(key['key'])).hexdigest()))
+                self.graph.add((key_entity, PROV.used, communication_entity))
+                if key.get('role'):
+                    bnode_usage = BNode()
+                    receiver_role_uri = create_uri(ATTXBase, wf_base_uri, key['role'])
+                    self.graph.add((key_entity, PROV.qualifiedUsage, bnode_usage))
+                    self.graph.add((bnode_usage, RDF.type, PROV.Usage))
+                    self.graph.add((bnode_usage, PROV.entity, communication_entity))
+                    self.graph.add((bnode_usage, PROV.hadRole, receiver_role_uri))
+                    self.graph.add((receiver_role_uri, RDF.type, PROV.Role))
+
+                # graph.add((communication_entity, RDF.type, PROV.Entity))
+        # The return is not really needed
+        # return self.graph
+
+    def _prov_usage(self, act_uri, input_object):
+        """Create qualified Usage if possible."""
+        # bnode = BNode()
+        for key in input_object:
+            key_entity = URIRef("{0}_{1}".format(act_uri, key['key']))
+            self.graph.add((act_uri, PROV.used, key_entity))
             if key.get('role'):
-                bnode_usage = BNode()
-                receiver_role_URI = create_URI(ATTXBase, workflow_base_URI, key['role'])
-                graph.add((key_entity, PROV.qualifiedUsage, bnode_usage))
-                graph.add((bnode_usage, RDF.type, PROV.Usage))
-                graph.add((bnode_usage, PROV.entity, communication_entity))
-                graph.add((bnode_usage, PROV.hadRole, receiver_role_URI))
-                graph.add((receiver_role_URI, RDF.type, PROV.Role))
+                role_uri = create_uri(ATTXBase, key['role'])
+                usage_uri = create_uri(ATTXBase, "used", md5(str(key['key'] + role_uri)).hexdigest())
+                self.graph.add((act_uri, PROV.qualifiedUsage, usage_uri))
+                self.graph.add((usage_uri, RDF.type, PROV.Usage))
+                self.graph.add((usage_uri, PROV.entity, key_entity))
+                self.graph.add((usage_uri, PROV.hadRole, role_uri))
+                self.graph.add((role_uri, RDF.type, PROV.Role))
 
-            # graph.add((communication_entity, RDF.type, PROV.Entity))
-    # The return is not really needed
-    return graph
+            self.graph.add((key_entity, RDF.type, PROV.Entity))
+            if self.payload.get(key['key']):
+                self.graph.add((key_entity, DCTERMS.source, Literal(str(self.payload[key['key']]))))
+        # The return is not really needed
+        # return self.graph
 
+    def _prov_generation(self, act_uri, output_object):
+        """Create qualified Usage if possible."""
+        # bnode = BNode()
+        for key in output_object:
+            key_entity = URIRef("{0}_{1}".format(act_uri, key['key']))
+            self.graph.add((act_uri, PROV.generated, key_entity))
+            if key.get('role'):
+                role_uri = create_uri(ATTXBase, key['role'])
+                generation_uri = create_uri(ATTXBase, "generated", md5(str(key['key'] + role_uri)).hexdigest())
+                self.graph.add((act_uri, PROV.qualifiedGeneration, generation_uri))
+                self.graph.add((generation_uri, RDF.type, PROV.Generation))
+                self.graph.add((generation_uri, PROV.entity, key_entity))
+                self.graph.add((generation_uri, PROV.hadRole, role_uri))
+                self.graph.add((role_uri, RDF.type, PROV.Role))
 
-def prov_usage(graph, activity_URI, input_Object, payload):
-    """Create qualified Usage if possible."""
-    # bnode = BNode()
-    for key in input_Object:
-        key_entity = URIRef("{0}_{1}".format(activity_URI, key['key']))
-        graph.add((activity_URI, PROV.used, key_entity))
-        if key.get('role'):
-            role_URI = create_URI(ATTXBase, key['role'])
-            usage_URI = create_URI(ATTXBase, "used", hashlib.md5(str(key['key'] + role_URI)).hexdigest())
-            graph.add((activity_URI, PROV.qualifiedUsage, usage_URI))
-            graph.add((usage_URI, RDF.type, PROV.Usage))
-            graph.add((usage_URI, PROV.entity, key_entity))
-            graph.add((usage_URI, PROV.hadRole, role_URI))
-            graph.add((role_URI, RDF.type, PROV.Role))
+            self.graph.add((key_entity, RDF.type, PROV.Entity))
+            if self.payload.get(key['key']):
+                self.graph.add((key_entity, DCTERMS.source, Literal(str(self.payload[key['key']]))))
+        # The return is not really needed
+        # return self.graph
 
-        graph.add((key_entity, RDF.type, PROV.Entity))
-        if payload.get(key['key']):
-            graph.add((key_entity, DCTERMS.source, Literal(str(payload[key['key']]))))
-    # The return is not really needed
-    return graph
+    def _prov_dataset(self, base_uri):
+        """Describe dataset provenance."""
+        if self.prov_object.get('output'):
+            output_object = self.prov_object['output']
+            agent_id = str(self.prov_object['agent']['ID'])
+            act_uri = create_uri(ATTXBase, base_uri, agent_id)
+            self._prov_generation(act_uri, output_object)
+            self._describe_dataset(output_object, act_uri)
+        if self.prov_object.get('input'):
+            input_object = self.prov_object['input']
+            agent_id = str(self.prov_object['agent']['ID'])
+            act_uri = create_uri(ATTXBase, base_uri, agent_id)
+            self._prov_usage(act_uri, input_object)
+            self._describe_dataset(input_object, act_uri)
+        # The return is not really needed
+        # return self.graph
 
-
-def prov_generation(graph, activity_URI, output_Object, payload):
-    """Create qualified Usage if possible."""
-    # bnode = BNode()
-    for key in output_Object:
-        key_entity = URIRef("{0}_{1}".format(activity_URI, key['key']))
-        graph.add((activity_URI, PROV.generated, key_entity))
-        if key.get('role'):
-            role_URI = create_URI(ATTXBase, key['role'])
-            generation_URI = create_URI(ATTXBase, "generated", hashlib.md5(str(key['key'] + role_URI)).hexdigest())
-            graph.add((activity_URI, PROV.qualifiedGeneration, generation_URI))
-            graph.add((generation_URI, RDF.type, PROV.Generation))
-            graph.add((generation_URI, PROV.entity, key_entity))
-            graph.add((generation_URI, PROV.hadRole, role_URI))
-            graph.add((role_URI, RDF.type, PROV.Role))
-
-        graph.add((key_entity, RDF.type, PROV.Entity))
-        if payload.get(key['key']):
-            graph.add((key_entity, DCTERMS.source, Literal(str(payload[key['key']]))))
-    # The return is not really needed
-    return graph
-
-
-def prov_dataset(graph, base_URI, prov_Object, payload):
-    """Describe dataset provenance."""
-    if prov_Object.get('output'):
-        output_Object = prov_Object['output']
-        agent_ID = str(prov_Object['agent']['ID'])
-        activity_URI = create_URI(ATTXBase, base_URI, agent_ID)
-        prov_generation(graph, activity_URI, output_Object, payload)
-        describe_dataset(graph, output_Object, activity_URI, payload)
-    if prov_Object.get('input'):
-        input_Object = prov_Object['input']
-        agent_ID = str(prov_Object['agent']['ID'])
-        activity_URI = create_URI(ATTXBase, base_URI, agent_ID)
-        prov_usage(graph, activity_URI, input_Object, payload)
-        describe_dataset(graph, input_Object, activity_URI, payload)
-    # The return is not really needed
-    return graph
-
-
-def describe_dataset(graph, dataset, activity_URI, payload):
-    """Describe dataset both input and output."""
-    for key in dataset:
-        key_entity = URIRef("{0}_{1}".format(activity_URI, key['key']))
-        graph.add((key_entity, RDF.type, ATTXOnto.Dataset))
-        graph.add((key_entity, RDF.type, PROV.Entity))
-        dataset_key = key["key"]
-        if payload.get(dataset_key) and type(payload[dataset_key]) is dict:
-            graph.add((key_entity, DCTERMS.source, Literal(str(payload[dataset_key]))))
-            for value in payload[dataset_key]:
-                graph.add((key_entity, create_URI(ATTXBase, value), Literal(str(payload[dataset_key][value]))))
-        elif payload.get(dataset_key) and type(payload[dataset_key]) is str:
-            graph.add((key_entity, DCTERMS.source, Literal(str(payload[dataset_key]))))
-    # The return is not really needed
-    return graph
+    def _describe_dataset(self, dataset, act_uri):
+        """Describe dataset both input and output."""
+        for key in dataset:
+            key_entity = URIRef("{0}_{1}".format(act_uri, key['key']))
+            self.graph.add((key_entity, RDF.type, ATTXOnto.Dataset))
+            self.graph.add((key_entity, RDF.type, PROV.Entity))
+            dataset_key = key["key"]
+            if self.payload.get(dataset_key) and type(self.payload[dataset_key]) is dict:
+                self.graph.add((key_entity, DCTERMS.source, Literal(str(self.payload[dataset_key]))))
+                for value in self.payload[dataset_key]:
+                    self.graph.add((key_entity, create_uri(ATTXBase, value), Literal(str(self.payload[dataset_key][value]))))
+            elif self.payload.get(dataset_key) and type(self.payload[dataset_key]) is str:
+                self.graph.add((key_entity, DCTERMS.source, Literal(str(self.payload[dataset_key]))))
+        # The return is not really needed
+        # return self.graph

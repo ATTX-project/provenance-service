@@ -13,7 +13,7 @@ def healthcheck_response(api_status, graph):
     """Content and format health status response."""
     health_status = dict([('provService', api_status)])
     try:
-        graph.graph_health()
+        graph._graph_health()
     except Exception:
         health_status['graphStore'] = "Not Running"
     else:

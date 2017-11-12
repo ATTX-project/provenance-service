@@ -3,7 +3,7 @@ import time
 import amqpstorm
 from amqpstorm import Connection
 from prov.utils.logs import app_logger
-from prov.applib.construct_prov import construct_provenance
+from prov.applib.construct_prov import prov_task
 from prov.utils.validate import valid_message
 from prov.schemas import load_schema
 
@@ -72,12 +72,12 @@ class Consumer(object):
         prov = json.loads(message.body)
         try:
             if isinstance(prov, dict):
-                response = construct_provenance.delay(prov["provenance"], prov["payload"])
+                response = prov_task.delay(prov["provenance"], prov["payload"])
                 result = {'task_id': response.id}
             elif isinstance(prov, list):
                 tasks = []
                 for obj in prov:
-                    response = construct_provenance.delay(obj["provenance"], obj["payload"])
+                    response = prov_task.delay(obj["provenance"], obj["payload"])
                     tasks.append(response.id)
                 result = {'task_id': tasks}
             app_logger.info('Processed provenance message with result {0}.'.format(result))

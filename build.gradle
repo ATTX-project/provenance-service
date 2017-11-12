@@ -74,6 +74,18 @@ dependencies {
     test 'pypi:responses:0.7.0'
 }
 
+// Succesfully running the tests requires a logs folder existing.
+task creatFolders {
+    description = "Create logs and data folders."
+    doFirst {
+        mkdir('logs')
+        // mkdir('data')
+    }
+}
+
+buildPex.dependsOn creatFolders
+pytest.dependsOn creatFolders
+
 repositories {
     // using a local repository
     ivy{
