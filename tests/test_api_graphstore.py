@@ -25,7 +25,7 @@ class GraphStoreTest(testing.TestCase):
 
 
 class GraphTestCase(GraphStoreTest):
-    """Test for Graph Store operations."""
+    """Test for Graph Store API operations."""
 
     def test_create(self):
         """Test create API."""

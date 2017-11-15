@@ -28,7 +28,7 @@ class ProvenanceAPITestCase(testing.TestCase):
 
 
 class ProvTestCase(ProvenanceAPITestCase):
-    """Test for Graph Store operations."""
+    """Test for Prov API operations."""
 
     def test_create(self):
         """Test create message."""

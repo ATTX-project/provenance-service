@@ -20,7 +20,7 @@ class QueueAPITestCase(testing.TestCase):
 
 
 class QueueTestCase(QueueAPITestCase):
-    """Test for Graph Store operations."""
+    """Test for Queue API operations."""
 
     def test_create(self):
         """Test create message."""
