@@ -9,7 +9,7 @@ from prov.app import init_api
 
 
 class GraphStoreTest(testing.TestCase):
-    """Testing Graph Store and initialize the app for that.."""
+    """Testing Graph Store API and initialize the app for that."""
 
     def setUp(self):
         """Setting the app up."""

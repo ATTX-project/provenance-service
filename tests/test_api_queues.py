@@ -6,7 +6,7 @@ from prov.app import init_api
 
 
 class QueueAPITestCase(testing.TestCase):
-    """Testing Graph Store and initialize the app for that.."""
+    """Testing Queues task."""
 
     def setUp(self):
         """Setting the app up."""
