@@ -1,9 +1,6 @@
 import unittest
-# from urllib import quote
 import responses
 import json
-# import httpretty
-# import pytest
 import falcon
 from falcon import testing
 from prov.app import init_api

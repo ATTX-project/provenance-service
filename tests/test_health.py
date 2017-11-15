@@ -35,6 +35,8 @@ class TestProv(appHealthTest):
         httpretty.register_uri(httpretty.GET, "http://localhost:7030/health", status=200)
         result = self.simulate_get('/health')
         assert(result.status == falcon.HTTP_200)
+        httpretty.disable()
+        httpretty.reset()
 
     @httpretty.activate
     def test_health_response(self):
@@ -45,6 +47,8 @@ class TestProv(appHealthTest):
         response = healthcheck_response("Running", fuseki)
         result = self.simulate_get('/health')
         assert(result.content == response)
+        httpretty.disable()
+        httpretty.reset()
 
     @patch('prov.api.healthcheck.healthcheck_response')
     def test_actual_health_response(self, mock):

@@ -15,11 +15,6 @@ class PrefixTestCase(unittest.TestCase):
         bind_prefix(self.graph)
         self.assertTrue(list(self.graph.namespaces()) != [], "Test if there are namespaces.")
 
-    # def test_namespace(self):
-    #     """Test connection."""
-    #     namspace_config('file.conf')
-    #     pass
-
     def test_create_URI_2vars(self):
         """Test creating an URI with 2 variables."""
         test_uri = create_uri(ATTXBase, "test")
