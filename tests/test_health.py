@@ -6,7 +6,6 @@ from falcon import testing
 from prov.app import init_api
 from prov.applib.graph_store import GraphStore
 from prov.api.healthcheck import healthcheck_response
-from mock import patch
 
 
 class appHealthTest(testing.TestCase):
@@ -50,14 +49,19 @@ class TestProv(appHealthTest):
         httpretty.disable()
         httpretty.reset()
 
-    @patch('prov.api.healthcheck.healthcheck_response')
-    def test_actual_health_response(self, mock):
-        """Test if json response format."""
+    @httpretty.activate
+    def test_health_message(self):
+        """Response message to healthcheck endpoint."""
         fuseki = GraphStore()
-        mock.return_value = {"graphStore": "Not Running", "provService": "Running", "messageBroker": "Not Running"}
+        httpretty.register_uri(httpretty.GET, "http://user:password@localhost:15672/api/aliveness-test/%2F", body='{"status": "ok"}', status=200)
+        httpretty.register_uri(httpretty.GET, "http://localhost:4304/health", status=200)
         response = healthcheck_response("Running", fuseki)
-        json_response = {"graphStore": "Not Running", "provService": "Running", "messageBroker": "Not Running"}
+        result = self.simulate_get('/health')
+        json_response = {"provService": "Running", "messageBroker": "Running", "graphStore": "Not Running"}
         assert(json_response == json.loads(response))
+        assert(result.content == response)
+        httpretty.disable()
+        httpretty.reset()
 
 
 if __name__ == "__main__":
