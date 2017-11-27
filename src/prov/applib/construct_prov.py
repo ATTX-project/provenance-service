@@ -7,6 +7,8 @@ from prov.utils.logs import app_logger
 from prov.applib.graph_store import GraphStore
 from prov.utils.queue import init_celery
 from prov.utils.broker import broker
+import ast
+import json
 
 app = init_celery(broker['user'], broker['pass'], broker['host'])
 
@@ -179,24 +181,36 @@ class Provenance(object):
         # The return is not really needed
         # return self.graph
 
+    def _key_entity(self, dataset_key):
+        """Return key for entity."""
+        key_entity = ast.literal_eval(json.dumps(self.payload[dataset_key]))
+        if self.payload.get(dataset_key) and type(key_entity) is dict:
+            return URIRef("{0}entity_{1}".format(ATTXBase, md5(str(self.payload[dataset_key]["uri"])).hexdigest()))
+        elif self.payload.get(dataset_key) and type(key_entity) is str:
+            return URIRef("{0}entity_{1}".format(ATTXBase, md5(str(self.payload[dataset_key])).hexdigest()))
+        else:
+            raise ValueError("Entity cannot be constructed.")
+
     def _prov_usage(self, act_uri, input_object):
         """Create qualified Usage if possible."""
         # bnode = BNode()
         for key in input_object:
-            if self.payload.get(key['key']):
-                key_entity = URIRef("{0}entity_{1}".format(ATTXBase, md5(str(self.payload[key['key']])).hexdigest()))
-                self.graph.add((key_entity, DCTERMS.source, Literal(str(self.payload[key['key']]))))
-                self.graph.add((act_uri, PROV.used, key_entity))
-                if key.get('role'):
-                    role_uri = create_uri(ATTXBase, key['role'])
-                    usage_uri = create_uri(ATTXBase, "used", md5(str(key['key'] + str(self.payload[key['key']]))).hexdigest())
-                    self.graph.add((act_uri, PROV.qualifiedUsage, usage_uri))
-                    self.graph.add((usage_uri, RDF.type, PROV.Usage))
-                    self.graph.add((usage_uri, PROV.entity, key_entity))
-                    self.graph.add((usage_uri, PROV.hadRole, role_uri))
-                    self.graph.add((role_uri, RDF.type, PROV.Role))
+            dataset_key = key["key"]
+            key_entity = self._key_entity(dataset_key)
+            # if self.payload.get(key['key']):
+            #     key_entity = URIRef("{0}entity_{1}".format(ATTXBase, md5(str(self.payload[key['key']])).hexdigest()))
+            self.graph.add((key_entity, DCTERMS.source, Literal(str(self.payload[key['key']]))))
+            self.graph.add((act_uri, PROV.used, key_entity))
+            if key.get('role'):
+                role_uri = create_uri(ATTXBase, key['role'])
+                usage_uri = create_uri(ATTXBase, "used", md5(str(key['key'] + str(self.payload[key['key']]))).hexdigest())
+                self.graph.add((act_uri, PROV.qualifiedUsage, usage_uri))
+                self.graph.add((usage_uri, RDF.type, PROV.Usage))
+                self.graph.add((usage_uri, PROV.entity, key_entity))
+                self.graph.add((usage_uri, PROV.hadRole, role_uri))
+                self.graph.add((role_uri, RDF.type, PROV.Role))
 
-                self.graph.add((key_entity, RDF.type, PROV.Entity))
+            self.graph.add((key_entity, RDF.type, PROV.Entity))
         # The return is not really needed
         # return self.graph
 
@@ -204,20 +218,22 @@ class Provenance(object):
         """Create qualified Usage if possible."""
         # bnode = BNode()
         for key in output_object:
-            if self.payload.get(key['key']):
-                key_entity = URIRef("{0}entity_{1}".format(ATTXBase, md5(str(self.payload[key['key']])).hexdigest()))
-                self.graph.add((key_entity, DCTERMS.source, Literal(str(self.payload[key['key']]))))
-                self.graph.add((act_uri, PROV.generated, key_entity))
-                if key.get('role'):
-                    role_uri = create_uri(ATTXBase, key['role'])
-                    generation_uri = create_uri(ATTXBase, "generated", md5(str(key['key'] + str(self.payload[key['key']]))).hexdigest())
-                    self.graph.add((act_uri, PROV.qualifiedGeneration, generation_uri))
-                    self.graph.add((generation_uri, RDF.type, PROV.Generation))
-                    self.graph.add((generation_uri, PROV.entity, key_entity))
-                    self.graph.add((generation_uri, PROV.hadRole, role_uri))
-                    self.graph.add((role_uri, RDF.type, PROV.Role))
+            dataset_key = key["key"]
+            key_entity = self._key_entity(dataset_key)
+            # if self.payload.get(key['key']):
+            #     key_entity = URIRef("{0}entity_{1}".format(ATTXBase, md5(str(self.payload[key['key']])).hexdigest()))
+            self.graph.add((key_entity, DCTERMS.source, Literal(str(self.payload[key['key']]))))
+            self.graph.add((act_uri, PROV.generated, key_entity))
+            if key.get('role'):
+                role_uri = create_uri(ATTXBase, key['role'])
+                generation_uri = create_uri(ATTXBase, "generated", md5(str(key['key'] + str(self.payload[key['key']]))).hexdigest())
+                self.graph.add((act_uri, PROV.qualifiedGeneration, generation_uri))
+                self.graph.add((generation_uri, RDF.type, PROV.Generation))
+                self.graph.add((generation_uri, PROV.entity, key_entity))
+                self.graph.add((generation_uri, PROV.hadRole, role_uri))
+                self.graph.add((role_uri, RDF.type, PROV.Role))
 
-                self.graph.add((key_entity, RDF.type, PROV.Entity))
+            self.graph.add((key_entity, RDF.type, PROV.Entity))
 
         # The return is not really needed
         # return self.graph
@@ -244,7 +260,7 @@ class Provenance(object):
         for key in dataset:
             dataset_key = key["key"]
             if self.payload.get(dataset_key) and type(self.payload[dataset_key]) is dict:
-                key_entity = URIRef("{0}entity_{1}".format(ATTXBase, md5(str(self.payload[dataset_key])).hexdigest()))
+                key_entity = URIRef("{0}entity_{1}".format(ATTXBase, md5(str(self.payload[dataset_key]["uri"])).hexdigest()))
                 self.graph.add((key_entity, RDF.type, ATTXOnto.Dataset))
                 self.graph.add((key_entity, RDF.type, PROV.Entity))
                 self.graph.add((key_entity, DCTERMS.source, Literal(str(self.payload[dataset_key]))))
