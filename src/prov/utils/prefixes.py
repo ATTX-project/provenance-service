@@ -7,6 +7,7 @@ CC = Namespace('https://creativecommons.org/ns#')
 PWO = Namespace('http://purl.org/spar/pwo/')
 
 ATTXURL = 'http://data.hulib.helsinki.fi/attx/'
+ATTXPROVURL = "http://data.hulib.helsinki.fi/prov_"
 ATTXBase = Namespace(ATTXURL)
 ATTXIDs = Namespace("{0}ids".format(ATTXURL))
 ATTXProv = Namespace("{0}prov".format(ATTXURL))

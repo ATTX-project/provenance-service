@@ -30,6 +30,18 @@ class GraphList(object):
         app_logger.info('Finished operations on /graph/list GET Request.')
 
 
+class ProvList(object):
+    """List named graphs in the graph store."""
+
+    def on_get(self, req, resp):
+        """Execution of the GET prov graph list request."""
+        fuseki = GraphStore()
+        resp.data = json.dumps(fuseki._prov_list(), indent=1, sort_keys=True)
+        resp.content_type = 'application/json'
+        resp.status = falcon.HTTP_200
+        app_logger.info('Finished operations on /graph/list/prov GET Request.')
+
+
 class GraphResource(object):
     """Retrieve or delete named graph."""
 

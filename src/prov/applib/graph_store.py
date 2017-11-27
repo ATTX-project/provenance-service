@@ -4,6 +4,7 @@ from urllib import quote
 from prov.utils.logs import app_logger
 from SPARQLWrapper import SPARQLWrapper
 from requests.exceptions import ConnectionError
+from prov.utils.prefixes import ATTXPROVURL
 
 
 class GraphStore(object):
@@ -50,7 +51,26 @@ class GraphStore(object):
                 temp_graph = dict([('graphURI', g['g']['value']), ('tripleCount', g['count']['value'])])
                 temp_list.append(temp_graph)
             result['graphs'] = temp_list
-            app_logger.info('Constructed list of Named graphs from "/{0}" dataset.'.format(self.dataset))
+            app_logger.info('Constructed list of Named Graphs from "/{0}" dataset.'.format(self.dataset))
+            return result
+
+    def _prov_list(self):
+        """List Graph Store Provenance Named Graphs."""
+        result = {}
+        temp_list = []
+        list_query = quote("select ?g {{graph ?g {{?s ?p ?o}} filter(regex(str(?g), '{0}'))}} group by ?g".format(ATTXPROVURL))
+        try:
+            request = requests.get("{0}/sparql?query={1}".format(self.request_address, list_query))
+        except Exception as error:
+            app_logger.error('Something is wrong: {0}'.format(error))
+            raise
+        else:
+            graphs = request.json()
+            result['graphsCount'] = len(graphs['results']['bindings'])
+            for g in graphs['results']['bindings']:
+                temp_list.append(g['g']['value'])
+            result['graphs'] = temp_list
+            app_logger.info('Constructed list of prov Named Graphs from "/{0}" dataset.'.format(self.dataset))
             return result
 
     def _graph_statistics(self):

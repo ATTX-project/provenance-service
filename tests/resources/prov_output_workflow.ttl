@@ -14,12 +14,12 @@
 attx:workflowingestionwf_activity1_UV a attxonto:WorkflowExecution,
         prov:Activity ;
     dcterms:title "Ingestion workflow" ;
-    prov:generated attx:workflowingestionwf_activity1_UV_outputDataset ;
+    prov:generated attx:entity_aa9141aea2522cb9c0aa31c4018120f0 ;
     prov:qualifiedAssociation attx:association_8f964bd174e90db0b452e67f98948c42 ;
-    prov:qualifiedGeneration attx:generated_7b9e078099d96962ae83f608c08d2e96 ;
-    prov:qualifiedUsage attx:used_238d7310e5d052ba188efdf006e00705 ;
+    prov:qualifiedGeneration attx:generated_a3093d1453162b225042a60cfe4fb9f0 ;
+    prov:qualifiedUsage attx:used_31f60735f63a5919b7133ec06f759862 ;
     prov:startedAtTime "2017-08-02T13:52:29+02:00"^^xsd:dateTime ;
-    prov:used attx:workflowingestionwf_activity1_UV_inputDataset ;
+    prov:used attx:entity_70935fe6854d194192d4df4b5af7295d ;
     prov:wasAssociatedWith attx:UV .
 
 attx:ETL a prov:Role .
@@ -29,12 +29,12 @@ attx:association_8f964bd174e90db0b452e67f98948c42 a prov:Association ;
     prov:hadPlan attx:workflowingestionwf_activity1 ;
     prov:hadRole attx:ETL .
 
-attx:generated_7b9e078099d96962ae83f608c08d2e96 a prov:Generation ;
-    prov:entity attx:workflowingestionwf_activity1_UV_outputDataset ;
+attx:generated_a3093d1453162b225042a60cfe4fb9f0 a prov:Generation ;
+    prov:entity attx:entity_aa9141aea2522cb9c0aa31c4018120f0 ;
     prov:hadRole attx:Dataset .
 
-attx:used_238d7310e5d052ba188efdf006e00705 a prov:Usage ;
-    prov:entity attx:workflowingestionwf_activity1_UV_inputDataset ;
+attx:used_31f60735f63a5919b7133ec06f759862 a prov:Usage ;
+    prov:entity attx:entity_70935fe6854d194192d4df4b5af7295d ;
     prov:hadRole attx:Dataset .
 
 attx:Dataset a prov:Role .
@@ -42,9 +42,9 @@ attx:Dataset a prov:Role .
 attx:UV a attxonto:Artifact,
         prov:Agent .
 
-attx:workflowingestionwf_activity1_UV_inputDataset a prov:Entity ;
+attx:entity_70935fe6854d194192d4df4b5af7295d a prov:Entity ;
     dcterms:source "http://dataset/1" .
 
-attx:workflowingestionwf_activity1_UV_outputDataset a prov:Entity ;
+attx:entity_aa9141aea2522cb9c0aa31c4018120f0 a prov:Entity ;
     dcterms:source "http://dataset/2" .
 

@@ -1,8 +1,8 @@
 import json
 import unittest
-from rdflib import Graph
+from rdflib import Graph, URIRef
 from prov.applib.construct_prov import prov_task, Provenance
-from prov.utils.prefixes import ATTXProv
+# from prov.utils.prefixes import ATTXProv
 from mock import patch
 from prov.applib.graph_store import GraphStore
 
@@ -48,7 +48,7 @@ class ProvenanceTestCase(unittest.TestCase):
         with open('tests/resources/prov_output_describe.ttl') as datafile1:
             graph_output = datafile1.read()
         prov_task(graph_data["provenance"], graph_data["payload"])
-        mock.assert_called_with(ATTXProv, graph_output)
+        mock.assert_called_with(URIRef("http://data.hulib.helsinki.fi/prov_workflowingestionwf_activity1"), graph_output)
 
     @patch.object(GraphStore, '_graph_add')
     def test_prov_communication_data_stored(self, mock):
@@ -58,7 +58,8 @@ class ProvenanceTestCase(unittest.TestCase):
         with open('tests/resources/prov_output_communication.ttl') as datafile1:
             graph_output = datafile1.read()
         prov_task(graph_data["provenance"], graph_data["payload"])
-        mock.assert_called_with(ATTXProv, graph_output)
+        # mock.assert_called_with(ATTXProv, graph_output)
+        mock.assert_called_with(URIRef("http://data.hulib.helsinki.fi/prov_workflowingestionwf_activity1"), graph_output)
 
     @patch.object(GraphStore, '_graph_add')
     def test_prov_workflow_data_stored(self, mock):
@@ -68,7 +69,7 @@ class ProvenanceTestCase(unittest.TestCase):
         with open('tests/resources/prov_output_workflow.ttl') as datafile1:
             graph_output = datafile1.read()
         prov_task(graph_data["provenance"], graph_data["payload"])
-        mock.assert_called_with(ATTXProv, graph_output)
+        mock.assert_called_with(URIRef("http://data.hulib.helsinki.fi/prov_workflowingestionwf_activity1"), graph_output)
 
 
 if __name__ == "__main__":

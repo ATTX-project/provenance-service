@@ -1,7 +1,8 @@
 from hashlib import md5
 from rdflib import Graph, BNode, Literal, URIRef
 from rdflib.namespace import RDF, DCTERMS, XSD
-from prov.utils.prefixes import bind_prefix, create_uri, ATTXProv, PROV, ATTXBase, ATTXOnto, PWO
+from prov.utils.prefixes import bind_prefix, create_uri
+from prov.utils.prefixes import ATTXProv, PROV, ATTXBase, ATTXOnto, PWO, ATTXPROVURL
 from prov.utils.logs import app_logger
 from prov.applib.graph_store import GraphStore
 from prov.utils.queue import init_celery
@@ -14,7 +15,8 @@ app = init_celery(broker['user'], broker['pass'], broker['host'])
 def prov_task(prov_object, payload):
     """Parse Provenance Object and construct Provenance Graph."""
     prov = Provenance(prov_object, payload)
-    prov._construct_provenance()
+    result = prov._construct_provenance()
+    return result
 
 
 class Provenance(object):
@@ -47,7 +49,7 @@ class Provenance(object):
                 self._prov_dataset(base_uri)
             else:
                 self._prov_activity(base_uri, wf_base_uri)
-            self._store_provenance()
+            self._store_provenance(wf_base_uri)
         except Exception as error:
             app_logger.error('Something is wrong with parsing the prov_object: {0}'.format(error))
             raise error
@@ -55,14 +57,17 @@ class Provenance(object):
         else:
             return self.graph.serialize(format='turtle')
 
-    def _store_provenance(self):
+    def _store_provenance(self, wf_base_uri):
         """Store resulting provenance in the Graph Store."""
         # We need to store provenance in a separate graph for each context
-        # And why not in the global Provenance graph
-        print self.graph.serialize(format='turtle')
+        # And also in the global Provenance graph
+        prov_doc = create_uri(ATTXPROVURL, wf_base_uri)
         storage = GraphStore()
-        storage_request = storage._graph_add(ATTXProv, self.graph.serialize(format='turtle'))
-        return storage_request
+        storage._graph_add(ATTXProv, self.graph.serialize(format='turtle'))
+        storage._graph_add(prov_doc, self.graph.serialize(format='turtle'))
+        # The return is not really needed
+        # print self.graph.serialize(format='turtle')
+        # return storage_request
 
     def _prov_activity(self, base_uri, wf_base_uri):
         """Construct Activity provenance Graph."""
@@ -178,20 +183,20 @@ class Provenance(object):
         """Create qualified Usage if possible."""
         # bnode = BNode()
         for key in input_object:
-            key_entity = URIRef("{0}_{1}".format(act_uri, key['key']))
-            self.graph.add((act_uri, PROV.used, key_entity))
-            if key.get('role'):
-                role_uri = create_uri(ATTXBase, key['role'])
-                usage_uri = create_uri(ATTXBase, "used", md5(str(key['key'] + role_uri)).hexdigest())
-                self.graph.add((act_uri, PROV.qualifiedUsage, usage_uri))
-                self.graph.add((usage_uri, RDF.type, PROV.Usage))
-                self.graph.add((usage_uri, PROV.entity, key_entity))
-                self.graph.add((usage_uri, PROV.hadRole, role_uri))
-                self.graph.add((role_uri, RDF.type, PROV.Role))
-
-            self.graph.add((key_entity, RDF.type, PROV.Entity))
             if self.payload.get(key['key']):
+                key_entity = URIRef("{0}entity_{1}".format(ATTXBase, md5(str(self.payload[key['key']])).hexdigest()))
                 self.graph.add((key_entity, DCTERMS.source, Literal(str(self.payload[key['key']]))))
+                self.graph.add((act_uri, PROV.used, key_entity))
+                if key.get('role'):
+                    role_uri = create_uri(ATTXBase, key['role'])
+                    usage_uri = create_uri(ATTXBase, "used", md5(str(key['key'] + str(self.payload[key['key']]))).hexdigest())
+                    self.graph.add((act_uri, PROV.qualifiedUsage, usage_uri))
+                    self.graph.add((usage_uri, RDF.type, PROV.Usage))
+                    self.graph.add((usage_uri, PROV.entity, key_entity))
+                    self.graph.add((usage_uri, PROV.hadRole, role_uri))
+                    self.graph.add((role_uri, RDF.type, PROV.Role))
+
+                self.graph.add((key_entity, RDF.type, PROV.Entity))
         # The return is not really needed
         # return self.graph
 
@@ -199,20 +204,21 @@ class Provenance(object):
         """Create qualified Usage if possible."""
         # bnode = BNode()
         for key in output_object:
-            key_entity = URIRef("{0}_{1}".format(act_uri, key['key']))
-            self.graph.add((act_uri, PROV.generated, key_entity))
-            if key.get('role'):
-                role_uri = create_uri(ATTXBase, key['role'])
-                generation_uri = create_uri(ATTXBase, "generated", md5(str(key['key'] + role_uri)).hexdigest())
-                self.graph.add((act_uri, PROV.qualifiedGeneration, generation_uri))
-                self.graph.add((generation_uri, RDF.type, PROV.Generation))
-                self.graph.add((generation_uri, PROV.entity, key_entity))
-                self.graph.add((generation_uri, PROV.hadRole, role_uri))
-                self.graph.add((role_uri, RDF.type, PROV.Role))
-
-            self.graph.add((key_entity, RDF.type, PROV.Entity))
             if self.payload.get(key['key']):
+                key_entity = URIRef("{0}entity_{1}".format(ATTXBase, md5(str(self.payload[key['key']])).hexdigest()))
                 self.graph.add((key_entity, DCTERMS.source, Literal(str(self.payload[key['key']]))))
+                self.graph.add((act_uri, PROV.generated, key_entity))
+                if key.get('role'):
+                    role_uri = create_uri(ATTXBase, key['role'])
+                    generation_uri = create_uri(ATTXBase, "generated", md5(str(key['key'] + str(self.payload[key['key']]))).hexdigest())
+                    self.graph.add((act_uri, PROV.qualifiedGeneration, generation_uri))
+                    self.graph.add((generation_uri, RDF.type, PROV.Generation))
+                    self.graph.add((generation_uri, PROV.entity, key_entity))
+                    self.graph.add((generation_uri, PROV.hadRole, role_uri))
+                    self.graph.add((role_uri, RDF.type, PROV.Role))
+
+                self.graph.add((key_entity, RDF.type, PROV.Entity))
+
         # The return is not really needed
         # return self.graph
 
@@ -236,11 +242,11 @@ class Provenance(object):
     def _describe_dataset(self, dataset, act_uri):
         """Describe dataset both input and output."""
         for key in dataset:
-            key_entity = URIRef("{0}_{1}".format(act_uri, key['key']))
-            self.graph.add((key_entity, RDF.type, ATTXOnto.Dataset))
-            self.graph.add((key_entity, RDF.type, PROV.Entity))
             dataset_key = key["key"]
             if self.payload.get(dataset_key) and type(self.payload[dataset_key]) is dict:
+                key_entity = URIRef("{0}entity_{1}".format(ATTXBase, md5(str(self.payload[dataset_key])).hexdigest()))
+                self.graph.add((key_entity, RDF.type, ATTXOnto.Dataset))
+                self.graph.add((key_entity, RDF.type, PROV.Entity))
                 self.graph.add((key_entity, DCTERMS.source, Literal(str(self.payload[dataset_key]))))
                 for value in self.payload[dataset_key]:
                     self.graph.add((key_entity, create_uri(ATTXBase, value), Literal(str(self.payload[dataset_key][value]))))
