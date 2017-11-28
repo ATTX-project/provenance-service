@@ -14,7 +14,7 @@ class ConstructProvenance(object):
         """Respond on GET request to map endpoint."""
         if isinstance(parsed, dict):
             response = prov_task.delay(parsed["provenance"], parsed["payload"])
-            result = {'task_id': response.id}
+            result = {'taskID': response.id}
             resp.body = json.dumps(result)
             resp.content_type = 'application/json'
         elif isinstance(parsed, list):
@@ -22,7 +22,7 @@ class ConstructProvenance(object):
             for obj in parsed:
                 response = prov_task.delay(obj["provenance"], obj["payload"])
                 tasks.append(response.id)
-            result = {'task_id': tasks}
+            result = {'taskID': tasks}
             resp.body = json.dumps(result)
             resp.content_type = 'application/json'
         # result = construct_provenance(parsed["provenance"], parsed["payload"])
