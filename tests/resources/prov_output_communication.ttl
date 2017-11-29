@@ -47,9 +47,9 @@ attx:used_f944cada0b5111516d27dc7d7c680e60 a prov:Usage ;
 
 attx:workflowingestionwf_activity1_stepreplaceds_GMAPI a prov:Activity ;
     prov:qualifiedUsage [ a prov:Usage ;
-            prov:entity attx:workflowingestionwf_activity1_stepreplaceds_GMAPI_b39d544213c61593513e8771de3ade8c ;
+            prov:entity attx:entity_292d4e619bb8f7c8341cbfae46c9060c ;
             prov:hadRole attx:workflowingestionwf_activity1_tempDataset ] ;
-    prov:used attx:workflowingestionwf_activity1_stepreplaceds_GMAPI_b39d544213c61593513e8771de3ade8c ;
+    prov:used attx:entity_292d4e619bb8f7c8341cbfae46c9060c ;
     prov:wasAssociatedWith attx:GMAPI .
 
 attx:workflowingestionwf_activity1_stepreplaceds_UV a attxonto:StepExecution,
@@ -77,11 +77,11 @@ attx:UV a attxonto:Artifact,
         prov:Agent ;
     rdfs:label "UV" .
 
-attx:entity_292d4e619bb8f7c8341cbfae46c9060c a prov:Entity ;
-    dcterms:source "attx:tempDataset" ;
-    rdfs:comment "Used Dataset" .
-
 attx:entity_aa9141aea2522cb9c0aa31c4018120f0 a prov:Entity ;
     dcterms:source "http://dataset/2" ;
     rdfs:comment "Generated Dataset" .
+
+attx:entity_292d4e619bb8f7c8341cbfae46c9060c a prov:Entity ;
+    dcterms:source "attx:tempDataset" ;
+    rdfs:comment "Used Dataset" .
 

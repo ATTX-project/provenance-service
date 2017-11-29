@@ -144,6 +144,16 @@ class Provenance(object):
         self.graph.add((workflow_uri, RDF.type, ATTXOnto.Workflow))
         self.graph.add((workflow_uri, PWO.hasStep, act_uri))
 
+    def _key_entity(self, dataset_key):
+        """Return key for entity."""
+        key_entity = ast.literal_eval(json.dumps(self.payload[dataset_key]))
+        if self.payload.get(dataset_key) and type(key_entity) is dict:
+            return URIRef("{0}entity_{1}".format(ATTXBase, md5(str(self.payload[dataset_key]["uri"])).hexdigest()))
+        elif self.payload.get(dataset_key) and type(key_entity) is str:
+            return URIRef("{0}entity_{1}".format(ATTXBase, md5(str(self.payload[dataset_key])).hexdigest()))
+        else:
+            raise ValueError("Entity URI cannot be constructed.")
+
     def _prov_communication(self, act_uri, wf_base_uri, base_uri):
         """Communication of an activity with another activity."""
         bnode = BNode()
@@ -166,7 +176,7 @@ class Provenance(object):
             # information about the Role
             self.graph.add((sender_role_uri, RDF.type, PROV.Role))
             for key in activity['input']:
-                communication_entity = URIRef("{0}_{1}".format(key_entity, md5(str(key['key'])).hexdigest()))
+                communication_entity = self._key_entity(key['key'])
                 self.graph.add((key_entity, PROV.used, communication_entity))
                 if key.get('role'):
                     bnode_usage = BNode()
@@ -178,16 +188,6 @@ class Provenance(object):
                     self.graph.add((receiver_role_uri, RDF.type, PROV.Role))
                     self.graph.add((receiver_role_uri, RDFS.label, Literal(key['role'])))
                 # graph.add((communication_entity, RDF.type, PROV.Entity))
-
-    def _key_entity(self, dataset_key):
-        """Return key for entity."""
-        key_entity = ast.literal_eval(json.dumps(self.payload[dataset_key]))
-        if self.payload.get(dataset_key) and type(key_entity) is dict:
-            return URIRef("{0}entity_{1}".format(ATTXBase, md5(str(self.payload[dataset_key]["uri"])).hexdigest()))
-        elif self.payload.get(dataset_key) and type(key_entity) is str:
-            return URIRef("{0}entity_{1}".format(ATTXBase, md5(str(self.payload[dataset_key])).hexdigest()))
-        else:
-            raise ValueError("Entity URI cannot be constructed.")
 
     def _prov_usage(self, base_uri, act_uri, input_object):
         """Create qualified Usage if possible."""
