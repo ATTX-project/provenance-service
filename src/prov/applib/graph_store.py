@@ -137,7 +137,8 @@ class GraphStore(object):
             raise
         else:
             app_logger.info('Updated named graph: {0}.'.format(named_graph))
-            return request.json()
+            app_logger.info('Graph Store response: {0}.'.format(request.text))
+            return request.text
 
     def _drop_graph(self, named_graph):
         """Drop named graph from Graph Store."""
