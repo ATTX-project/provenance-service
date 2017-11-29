@@ -6,9 +6,8 @@ from prov.applib.messaging_client import RpcClient
 from prov.applib.graph_store import GraphStore
 
 app = init_celery(broker['user'], broker['pass'], broker['host'])
-prov_doc_type = "provenance"
 prov_alias = "attx"
-prov_ld_frame = "{}"
+prov_ld_frame = "{\"@type\": \"http:\/\/www.w3.org\/ns\/prov#Activity\"}"
 
 
 @app.task(name="construct.index", max_retries=5)
@@ -32,11 +31,12 @@ class ProvenanceIndex(object):
         fuseki = GraphStore()
         data = fuseki._prov_list()
         for graph in data['graphs']:
-            bulk_framed = self._get_framed_provenance(graph)
-            self._do_bulk_index(bulk_framed)
-            app_logger.info('Indexed graph: {0}'.format(graph))
+            prov_doc_type = str(graph).split("http://data.hulib.helsinki.fi/prov_", 1)[1]
+            bulk_framed = self._get_framed_provenance(graph, prov_doc_type)
+            self._do_bulk_index(bulk_framed, prov_doc_type)
+            app_logger.info('Indexed graph: {0} with doc type: {1}'.format(graph, prov_doc_type))
 
-    def _get_framed_provenance(self, graph):
+    def _get_framed_provenance(self, graph, prov_doc_type):
         """Construct message for framing service."""
         message = dict()
         message["provenance"] = dict()
@@ -56,7 +56,7 @@ class ProvenanceIndex(object):
         response = frame_rpc.call(json.dumps(message))
         return response
 
-    def _do_bulk_index(self, frame_response):
+    def _do_bulk_index(self, frame_response, prov_doc_type):
         """Construct message for indexing service."""
         message = dict()
         message["provenance"] = dict()
