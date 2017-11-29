@@ -8,7 +8,7 @@ from falcon import testing
 from prov.app import init_api
 
 
-class GraphStoreTest(testing.TestCase):
+class APIGraphStoreTest(testing.TestCase):
     """Testing Graph Store API and initialize the app for that."""
 
     def setUp(self):
@@ -24,7 +24,7 @@ class GraphStoreTest(testing.TestCase):
         pass
 
 
-class GraphTestCase(GraphStoreTest):
+class APIGraphTestCase(APIGraphStoreTest):
     """Test for Graph Store API operations."""
 
     def test_create(self):
@@ -107,16 +107,16 @@ class GraphTestCase(GraphStoreTest):
             """Request callback for drop graph."""
             headers = {'content-type': "application/json",
                        'cache-control': "no-cache"}
-            return (200, headers, json.dumps(graph_data))
+            return (200, headers, graph_data)
 
         responses.add_callback(
             responses.POST, "{0}{1}/graph/update".format(self.api, self.version),
             callback=request_callback2,
-            content_type='application/json',
+            content_type='text/plain',
         )
         result = self.simulate_post("/{0}/graph/update".format(self.version), body=graph_data)
         assert(result.status == falcon.HTTP_200)
-        assert(result.json == response_data)
+        assert(result.json == json.dumps(response_data))
 
     @responses.activate
     def test_api_graph_drop(self):

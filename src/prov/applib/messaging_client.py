@@ -59,7 +59,7 @@ class RpcClient(object):
 
         while not self.response:
             self.channel.process_data_events(to_tuple=False)
-        return int(self.response)
+        return self.response
 
     def _on_response(self, message):
         """Handle response."""

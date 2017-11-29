@@ -52,11 +52,12 @@ class Provenance(object):
                 self._prov_dataset(base_uri)
             else:
                 self._prov_activity(base_uri, wf_base_uri)
-            self._store_provenance(wf_base_uri)
         except Exception as error:
             app_logger.error('Something is wrong with parsing the prov_object: {0}'.format(error))
             raise error
         else:
+            self._store_provenance(wf_base_uri)
+            self._store_provenance_graph()
             return self.graph.serialize(format='turtle')
 
     def _store_provenance(self, wf_base_uri):
@@ -65,8 +66,12 @@ class Provenance(object):
         # And also in the global Provenance graph
         prov_doc = create_uri(ATTXPROVURL, wf_base_uri)
         storage = GraphStore()
-        storage._graph_add(ATTXProv, self.graph.serialize(format='turtle'))
         storage._graph_add(prov_doc, self.graph.serialize(format='turtle'))
+
+    def _store_provenance_graph(self):
+        """Store resulting provenance in the Graph Store."""
+        storage = GraphStore()
+        storage._graph_add(ATTXProv, self.graph.serialize(format='turtle'))
 
     def _prov_activity(self, base_uri, wf_base_uri):
         """Construct Activity provenance Graph."""

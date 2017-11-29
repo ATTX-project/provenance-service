@@ -136,7 +136,7 @@ class GraphTestCase(GraphStoreTest):
         )
         fuseki = GraphStore()
         result = fuseki._graph_add(url, graph_data)
-        assert(result == response_data)
+        assert(result == json.dumps(response_data))
 
     @responses.activate
     def test_graph_add_bad(self):
