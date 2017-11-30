@@ -1,13 +1,15 @@
 import json
+# from json import JSONEncoder
 from prov.utils.logs import app_logger
 from prov.utils.queue import init_celery
 from prov.utils.broker import broker
 from prov.applib.messaging_client import RpcClient
 from prov.applib.graph_store import GraphStore
+from prov.schemas import load_schema
 
 app = init_celery(broker['user'], broker['pass'], broker['host'])
 prov_alias = "attx"
-prov_ld_frame = "{\"@type\": \"http:\/\/www.w3.org\/ns\/prov#Activity\"}"
+prov_ld_frame = json.dumps(load_schema('prov_frame'))
 
 
 @app.task(name="construct.index", max_retries=5)

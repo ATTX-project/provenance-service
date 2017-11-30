@@ -1,0 +1,22 @@
+{
+    "@explicit": "false",
+    "@type": "http://www.w3.org/ns/prov#Activity",
+    "http://www.w3.org/ns/prov#qualifiedAssociation": {
+        "@explicit": "true"
+    },
+    "http://www.w3.org/ns/prov#hadPlan": {
+        "@explicit": "true"
+    },
+    "http://www.w3.org/ns/prov#qualifiedCommunication": {
+        "@explicit": "true",
+        "http://www.w3.org/ns/prov#activity": ""
+    },
+    "http://www.w3.org/ns/prov#qualifiedGeneration": {
+        "@explicit": "true",
+        "http://www.w3.org/ns/prov#entity": ""
+    },
+    "http://www.w3.org/ns/prov#qualifiedUsage": {
+        "@explicit": "true",
+        "http://www.w3.org/ns/prov#entity": ""
+    }
+}
