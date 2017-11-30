@@ -1,5 +1,4 @@
 {
-    "@explicit": "false",
     "@type": "http://www.w3.org/ns/prov#Activity",
     "http://www.w3.org/ns/prov#qualifiedAssociation": {
         "@explicit": "true"
