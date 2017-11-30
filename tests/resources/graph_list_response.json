@@ -1,0 +1,12 @@
+{
+    "graphs": [{
+            "graphURI": "http://data.hulib.helsinki.fi/attx/onto",
+            "tripleCount": "370"
+        },
+        {
+            "graphURI": "http://data.hulib.helsinki.fi/attx/strategy",
+            "tripleCount": "18"
+        }
+    ],
+    "graphsCount": 2
+}

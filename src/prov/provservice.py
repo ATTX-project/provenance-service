@@ -3,7 +3,7 @@ import multiprocessing
 import gunicorn.app.base
 from prov.app import init_api
 from prov.utils.queue import init_celery
-from prov.utils.messaging import Consumer
+from prov.applib.messaging import Consumer
 from prov.utils.broker import broker
 from celery.bin import worker
 from gunicorn.six import iteritems
@@ -32,30 +32,25 @@ def server(host, port, log, workers):
 
 
 @cli.command('queue')
-@click.option('--address', help='message broker host.')
-@click.option('--user', help='message broker user.')
-@click.option('--password', help='message broker password.')
+@click.option('--address', default=broker['host'], help='message broker host.')
+@click.option('--user', default=broker['user'], help='message broker user.')
+@click.option('--password', default=broker['pass'], help='message broker password.')
 def queue(user, password, address):
     """Task execution with options."""
-    username = broker['user'] if user is None else user
-    key = broker['pass'] if password is None else password
-    host = broker['host'] if address is None else address
-
-    test = worker.worker(app=init_celery(username, key, host))
+    queue = worker.worker(app=init_celery(user, password, address))
     options = {
-        'broker': 'amqp://{0}:{1}@{2}:5672//'.format(username, key, host),
+        'broker': 'amqp://{0}:{1}@{2}:5672//'.format(user, password, address),
         'loglevel': 'INFO',
         'traceback': True,
     }
-    test.run(**options)
+    queue.run(**options)
 
 
 @cli.command('consumer')
 def consumer():
     """Consuming some messages."""
-    # consumer(broker['host'], broker['user'], broker['pass'])
-    CONSUMER = Consumer(broker['host'], broker['user'], broker['pass'], broker['queue'])
-    CONSUMER.start()
+    consumer_init = Consumer(broker['host'], broker['user'], broker['pass'], broker['queue'])
+    consumer_init.start()
 
 
 class PROVService(gunicorn.app.base.BaseApplication):
@@ -81,7 +76,7 @@ class PROVService(gunicorn.app.base.BaseApplication):
 
 # Unless really needed to scale use this function. Otherwise 2 workers suffice.
 def number_of_workers():
-    """Establish the numberb or workers based on cpu_count."""
+    """Establish the number or workers based on cpu_count."""
     return (multiprocessing.cpu_count() * 2) + 1
 
 

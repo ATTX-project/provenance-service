@@ -1,5 +1,5 @@
 from rdflib import Namespace, URIRef
-from ConfigParser import SafeConfigParser
+# from ConfigParser import SafeConfigParser
 
 PROV = Namespace('http://www.w3.org/ns/prov#')
 SD = Namespace('http://www.w3.org/ns/sparql-service-description#')
@@ -7,6 +7,7 @@ CC = Namespace('https://creativecommons.org/ns#')
 PWO = Namespace('http://purl.org/spar/pwo/')
 
 ATTXURL = 'http://data.hulib.helsinki.fi/attx/'
+ATTXPROVURL = "http://data.hulib.helsinki.fi/prov_"
 ATTXBase = Namespace(ATTXURL)
 ATTXIDs = Namespace("{0}ids".format(ATTXURL))
 ATTXProv = Namespace("{0}prov".format(ATTXURL))
@@ -28,7 +29,7 @@ def bind_prefix(graph):
     return graph
 
 
-def create_URI(namespace, string, connector=None):
+def create_uri(namespace, string, connector=None):
     """Add prefix to a certain string."""
     if connector:
         return URIRef("{0}{1}_{2}".format(namespace, string, connector))
@@ -37,9 +38,9 @@ def create_URI(namespace, string, connector=None):
 
 
 # TBD
-def namspace_config(config_file):
-    """Read Namespace config from file."""
-    parser = SafeConfigParser()
-    parser.read(config_file)
-
-    pass
+# def namspace_config(config_file):
+#     """Read Namespace config from file."""
+#     parser = SafeConfigParser()
+#     parser.read(config_file)
+#
+#     pass

@@ -1,0 +1,68 @@
+@prefix attx: <http://data.hulib.helsinki.fi/attx/> .
+@prefix attxonto: <http://data.hulib.helsinki.fi/attx/onto#> .
+@prefix dc: <http://purl.org/dc/elements/1.1/> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix pwo: <http://purl.org/spar/pwo/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema: <http://schema.org/> .
+@prefix sd: <http://www.w3.org/ns/sparql-service-description#> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+attx:workflowingestionwf_activity1 a attxonto:Workflow,
+        prov:Plan ;
+    pwo:hasStep attx:workflowingestionwf_activity1_stepreplaceds_UV .
+
+attx:Dataset a prov:Role .
+
+attx:ETL a prov:Role .
+
+attx:GMAPI a attxonto:Artifact,
+        prov:Agent .
+
+attx:association_9cf07b13957d30c1dff6f6a88126cb4b a prov:Association ;
+    prov:agent attx:UV ;
+    prov:hadRole attx:ETL .
+
+attx:generated_7b9e078099d96962ae83f608c08d2e96 a prov:Generation ;
+    prov:entity attx:workflowingestionwf_activity1_stepreplaceds_UV_outputDataset ;
+    prov:hadRole attx:Dataset .
+
+attx:storage a prov:Role .
+
+attx:tempDataset a prov:Role .
+
+attx:used_8c7a94b79785a3e0a13b22d176194f34 a prov:Usage ;
+    prov:entity attx:workflowingestionwf_activity1_stepreplaceds_UV_transformerData ;
+    prov:hadRole attx:tempDataset .
+
+attx:workflowingestionwf_activity1_stepreplaceds_GMAPI a prov:Activity ;
+    prov:wasAssociatedWith attx:GMAPI .
+
+attx:workflowingestionwf_activity1_stepreplaceds_UV a attxonto:StepExecution,
+        prov:Activity ;
+    attxonto:hasStatus "SUCCESS" ;
+    dcterms:title "Replace content of the existing dataset" ;
+    prov:endedAtTime "2017-08-02T13:52:29+02:00"^^xsd:dateTime ;
+    prov:generated attx:workflowingestionwf_activity1_stepreplaceds_UV_outputDataset ;
+    prov:qualifiedAssociation attx:association_9cf07b13957d30c1dff6f6a88126cb4b ;
+    prov:qualifiedCommunication [ a prov:Communication ;
+            prov:activity attx:workflowingestionwf_activity1_stepreplaceds_GMAPI ;
+            prov:hadRole attx:storage ] ;
+    prov:qualifiedGeneration attx:generated_7b9e078099d96962ae83f608c08d2e96 ;
+    prov:qualifiedUsage attx:used_8c7a94b79785a3e0a13b22d176194f34 ;
+    prov:startedAtTime "2017-08-02T13:52:29+02:00"^^xsd:dateTime ;
+    prov:used attx:workflowingestionwf_activity1_stepreplaceds_UV_transformerData ;
+    prov:wasAssociatedWith attx:UV .
+
+attx:UV a attxonto:Artifact,
+        prov:Agent .
+
+attx:workflowingestionwf_activity1_stepreplaceds_UV_outputDataset a prov:Entity ;
+    dcterms:source "http://dataset/2" .
+
+attx:workflowingestionwf_activity1_stepreplaceds_UV_transformerData a prov:Entity ;
+    dcterms:source "attx:tempDataset" .
+

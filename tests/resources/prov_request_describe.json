@@ -1,0 +1,44 @@
+{
+    "provenance": {
+        "context": {
+            "workflowID": "ingestionwf",
+            "activityID": 1,
+            "step": "describeExternalDS"
+
+        },
+        "agent": {
+            "ID": "UV",
+            "role": "ETL"
+        },
+        "activity": {
+            "title": "Ingestion workflow",
+            "type": "DescribeStepExecution",
+            "startTime": "2017-08-02T13:52:29+02:00",
+            "endTime": "2017-08-02T13:52:29+02:00"
+        },
+        "input": [{
+            "key": "inputDataset",
+            "role": "Dataset"
+        }],
+        "output": [{
+                "key": "outputDataset",
+                "role": "Dataset"
+            },
+            {
+                "key": "outputDataset2",
+                "role": "Dataset"
+            }
+        ]
+    },
+    "payload": {
+        "inputDataset": "attx://ds/2",
+        "outputDataset": {
+            "uri": "attx://ds/1",
+            "title": "Harvested dataset",
+            "description": "",
+            "publisher": "UH",
+            "license": "http://cc/0"
+        },
+        "outputDataset2": "attx://ds/3"
+    }
+}
