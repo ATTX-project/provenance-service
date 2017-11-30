@@ -30,11 +30,18 @@ class ProvenanceIndex(object):
         """Index provenance in Elasticsearch."""
         fuseki = GraphStore()
         data = fuseki._prov_list()
+        bulk_list = []
         for graph in data['graphs']:
             prov_doc_type = str(graph).split("http://data.hulib.helsinki.fi/prov_", 1)[1]
-            bulk_framed = self._get_framed_provenance(graph, prov_doc_type)
-            self._do_bulk_index(bulk_framed, prov_doc_type)
-            app_logger.info('Indexed graph: {0} with doc type: {1}'.format(graph, prov_doc_type))
+            frame_response = self._get_framed_provenance(graph, prov_doc_type)
+            frame_data = json.loads(frame_response)
+            if str(frame_data["payload"]["status"]).lower() == "success":
+                bulk_list.append(frame_data["payload"]["framingServiceOutput"]["output"])
+            else:
+                raise AssertionError("Frame operation did not succeed.")
+
+        self._do_bulk_index(bulk_list, prov_doc_type)
+        app_logger.info('Indexed documents with doc type: {0}'.format(prov_doc_type))
 
     def _get_framed_provenance(self, graph, prov_doc_type):
         """Construct message for framing service."""
@@ -56,7 +63,7 @@ class ProvenanceIndex(object):
         response = frame_rpc.call(json.dumps(message))
         return response
 
-    def _do_bulk_index(self, frame_response, prov_doc_type):
+    def _do_bulk_index(self, output_list, prov_doc_type):
         """Construct message for indexing service."""
         message = dict()
         message["provenance"] = dict()
@@ -68,17 +75,11 @@ class ProvenanceIndex(object):
         payload_message["indexingServiceInput"]["targetAlias"] = [prov_alias]
         payload_message["indexingServiceInput"]["sourceData"] = []
 
-        frame_data = json.loads(frame_response)
-
-        if str(frame_data["payload"]["status"]).lower() == "success":
-            frame_output = frame_data["payload"]["framingServiceOutput"]["output"]
-
-            index_data = dict({"useBulk": True, "docType": prov_doc_type, "inputType": "URI", "input": str(frame_output)})
+        for item in output_list:
+            index_data = dict({"useBulk": True, "docType": prov_doc_type, "inputType": "URI", "input": str(item)})
             payload_message["indexingServiceInput"]["sourceData"].append(index_data)
 
-            frame_rpc = RpcClient(broker['host'], broker['user'], broker['pass'], broker['indexqueue'])
-            app_logger.info('Index service message: {0}'.format(json.dumps(message)))
-            response = frame_rpc.call(json.dumps(message))
-            return response
-        else:
-            raise AssertionError("Frame operation did not succeed.")
+        frame_rpc = RpcClient(broker['host'], broker['user'], broker['pass'], broker['indexqueue'])
+        app_logger.info('Index service message: {0}'.format(json.dumps(message)))
+        response = frame_rpc.call(json.dumps(message))
+        return response
