@@ -64,10 +64,16 @@ def consumer():
 def publisher():
     """Consuming some messages."""
     app_logger.info('Provenance indexer')
-    schedule.every(interval["timer"]).minutes.do(execute_indexing)
-    while True:
-        schedule.run_pending()
-        time.sleep(1)
+    sint = 10
+    try:
+        sint = int(interval["timer"])
+    except ValueError:
+        pass
+    finally:
+        schedule.every(sint).minutes.do(execute_indexing)
+        while True:
+            schedule.run_pending()
+            time.sleep(1)
 
 
 class PROVService(gunicorn.app.base.BaseApplication):
