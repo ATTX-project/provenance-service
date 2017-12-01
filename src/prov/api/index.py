@@ -20,17 +20,28 @@ class IndexProv(object):
     def on_post(self, req, resp):
         """POST request to index provenance documents in Elasticsearch."""
         try:
-            frame_request = requests.get("http://{0}:{1}/health".format(ldframe["host"], ldframe["port"]))
-            index_request = requests.get("http://{0}:{1}/health".format(index["host"], index["port"]))
-            if frame_request.status_code == 200 and index_request.status_code == 200:
-                response = index_task.delay()
-                result = {'task_id': response.id}
-                resp.body = json.dumps(result)
-                resp.content_type = 'application/json'
-                resp.status = falcon.HTTP_200
+            response = execute_indexing()
+            result = {'taskID': response.id}
+            resp.body = json.dumps(result)
+            resp.content_type = 'application/json'
+            resp.status = falcon.HTTP_200
         except Exception:
             raise falcon.HTTPBadGateway(
                 'Services not found',
                 'Could not find Services for either ldFrame, esIndexing or both.'
             )
         app_logger.info('Accepted POST Request for /index/prov.')
+
+
+def execute_indexing():
+    """Index provenance data by applying ld frame."""
+    try:
+        frame_request = requests.get("http://{0}:{1}/health".format(ldframe["host"], ldframe["port"]))
+        index_request = requests.get("http://{0}:{1}/health".format(index["host"], index["port"]))
+        if frame_request.status_code == 200 and index_request.status_code == 200:
+            response = index_task.delay()
+    except Exception:
+        app_logger.error('Could not find Services for either ldFrame, esIndexing or both.')
+        pass
+    else:
+        return response

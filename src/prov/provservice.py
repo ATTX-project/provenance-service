@@ -1,12 +1,19 @@
 import click
 import multiprocessing
+import schedule
+import time
 import gunicorn.app.base
 from prov.app import init_api
 from prov.utils.queue import init_celery
 from prov.applib.messaging import Consumer
+from prov.api.index import execute_indexing
 from prov.utils.broker import broker
 from celery.bin import worker
 from gunicorn.six import iteritems
+from prov.utils.logs import app_logger
+from os import environ
+
+interval = {'timer': environ['QTIME'] if 'QTIME' in environ else 10}
 
 
 @click.group()
@@ -51,6 +58,16 @@ def consumer():
     """Consuming some messages."""
     consumer_init = Consumer(broker['host'], broker['user'], broker['pass'], broker['queue'])
     consumer_init.start()
+
+
+@cli.command('indexer')
+def publisher():
+    """Consuming some messages."""
+    app_logger.info('Provenance indexer')
+    schedule.every(interval["timer"]).minutes.do(execute_indexing)
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
 
 
 class PROVService(gunicorn.app.base.BaseApplication):

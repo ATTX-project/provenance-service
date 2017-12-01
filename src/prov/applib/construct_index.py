@@ -33,18 +33,21 @@ class ProvenanceIndex(object):
         fuseki = GraphStore()
         data = fuseki._prov_list()
         bulk_list = dict()
-        for graph in data['graphs']:
-            prov_doc_type = str(graph).split("http://data.hulib.helsinki.fi/prov_", 1)[1]
-            frame_response = self._get_framed_provenance(graph, prov_doc_type)
-            frame_data = json.loads(frame_response)
-            if str(frame_data["payload"]["status"]).lower() == "success":
-                bulk_list[prov_doc_type] = frame_data["payload"]["framingServiceOutput"]["output"]
-                # bulk_list.append()
-            else:
-                raise AssertionError("Frame operation did not succeed.")
+        if len(data['graphs']) > 0:
+            for graph in data['graphs']:
+                prov_doc_type = str(graph).split("http://data.hulib.helsinki.fi/prov_", 1)[1]
+                frame_response = self._get_framed_provenance(graph, prov_doc_type)
+                frame_data = json.loads(frame_response)
+                if str(frame_data["payload"]["status"]).lower() == "success":
+                    bulk_list[prov_doc_type] = frame_data["payload"]["framingServiceOutput"]["output"]
+                    # bulk_list.append()
+                else:
+                    raise AssertionError("Frame operation did not succeed.")
 
-        self._do_bulk_index(bulk_list)
-        app_logger.info('Indexed documents with doc type: {0}'.format(prov_doc_type))
+            self._do_bulk_index(bulk_list)
+            app_logger.info('Indexed documents with doc type: {0}'.format(prov_doc_type))
+        else:
+            app_logger.warning('There are no provenance graphs.')
 
     def _get_framed_provenance(self, graph, prov_doc_type):
         """Construct message for framing service."""
