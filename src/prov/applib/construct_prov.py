@@ -82,9 +82,7 @@ class Provenance(object):
         if activity.get('type'):
             self.graph.add((act_uri, RDF.type,
                             create_uri(ATTXOnto, activity['type'])))
-            self._prov_association(act_uri, wf_base_uri)
-        else:
-            self._prov_association(act_uri)
+        self._prov_association(act_uri, wf_base_uri)
         if activity.get('title'):
             self.graph.add((act_uri, DCTERMS.title, Literal(activity['title'])))
             self.graph.add((act_uri, RDFS.label, Literal(activity['title'])))
@@ -111,12 +109,13 @@ class Provenance(object):
         if activity.get('endTime'):
             self.graph.add((act_uri, PROV.endedAtTime, Literal(activity['endTime'], datatype=XSD.dateTime)))
 
-    def _prov_association(self, act_uri, wf_base_uri=None):
+    def _prov_association(self, act_uri, wf_base_uri):
         """Associate an activity with an Agent."""
         agent = self.prov_object['agent']
         agent_URI = create_uri(ATTXBase, agent['ID'])
         role_uri = create_uri(ATTXBase, agent['role'])
-        association_uri = create_uri(ATTXBase, "association", md5(str(agent_URI + role_uri + self.prov_object['activity']['type'])).hexdigest())
+        type_id = md5(str(agent_URI + role_uri + self.prov_object['activity']['type'])).hexdigest()
+        association_uri = create_uri(ATTXBase, "{0}_association".format(wf_base_uri), type_id)
 
         self.graph.add((act_uri, PROV.wasAssociatedWith, agent_URI))
         self.graph.add((act_uri, PROV.qualifiedAssociation, association_uri))

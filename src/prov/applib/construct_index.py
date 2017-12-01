@@ -32,18 +32,22 @@ class ProvenanceIndex(object):
         """Index provenance in Elasticsearch."""
         fuseki = GraphStore()
         data = fuseki._prov_list()
-        bulk_list = []
-        for graph in data['graphs']:
-            prov_doc_type = str(graph).split("http://data.hulib.helsinki.fi/prov_", 1)[1]
-            frame_response = self._get_framed_provenance(graph, prov_doc_type)
-            frame_data = json.loads(frame_response)
-            if str(frame_data["payload"]["status"]).lower() == "success":
-                bulk_list.append(frame_data["payload"]["framingServiceOutput"]["output"])
-            else:
-                raise AssertionError("Frame operation did not succeed.")
+        bulk_list = dict()
+        if len(data['graphs']) > 0:
+            for graph in data['graphs']:
+                prov_doc_type = str(graph).split("http://data.hulib.helsinki.fi/prov_", 1)[1]
+                frame_response = self._get_framed_provenance(graph, prov_doc_type)
+                frame_data = json.loads(frame_response)
+                if str(frame_data["payload"]["status"]).lower() == "success":
+                    bulk_list[prov_doc_type] = frame_data["payload"]["framingServiceOutput"]["output"]
+                    # bulk_list.append()
+                else:
+                    raise AssertionError("Frame operation did not succeed.")
 
-        self._do_bulk_index(bulk_list, prov_doc_type)
-        app_logger.info('Indexed documents with doc type: {0}'.format(prov_doc_type))
+            self._do_bulk_index(bulk_list)
+            app_logger.info('Indexed documents with doc type: {0}'.format(prov_doc_type))
+        else:
+            app_logger.warning('There are no provenance graphs.')
 
     def _get_framed_provenance(self, graph, prov_doc_type):
         """Construct message for framing service."""
@@ -65,7 +69,7 @@ class ProvenanceIndex(object):
         response = frame_rpc.call(json.dumps(message))
         return response
 
-    def _do_bulk_index(self, output_list, prov_doc_type):
+    def _do_bulk_index(self, output_list):
         """Construct message for indexing service."""
         message = dict()
         message["provenance"] = dict()
@@ -77,8 +81,8 @@ class ProvenanceIndex(object):
         payload_message["indexingServiceInput"]["targetAlias"] = [prov_alias]
         payload_message["indexingServiceInput"]["sourceData"] = []
 
-        for item in output_list:
-            index_data = dict({"useBulk": True, "docType": prov_doc_type, "inputType": "URI", "input": str(item)})
+        for key, item in output_list.iteritems():
+            index_data = dict({"useBulk": True, "docType": key, "inputType": "URI", "input": str(item)})
             payload_message["indexingServiceInput"]["sourceData"].append(index_data)
 
         frame_rpc = RpcClient(broker['host'], broker['user'], broker['pass'], broker['indexqueue'])

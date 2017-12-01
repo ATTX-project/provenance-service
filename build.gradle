@@ -68,6 +68,7 @@ dependencies {
     python 'pypi:gunicorn:19.7.1'
     python 'pypi:python-mimeparse:1.6.0'
     python 'pypi:click:6.7'
+    python 'pypi:schedule:0.4.3'
     test 'pypi:pbr:3.1.1'
     test 'pypi:pytz:2016.4'
     test 'pypi:httpretty:0.8.14'
