@@ -1,0 +1,4 @@
+{
+    "graphs": ["http://data.hulib.helsinki.fi/attx/onto", "http://data.hulib.helsinki.fi/attx/strategy"],
+    "graphsCount": 2
+}

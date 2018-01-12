@@ -31,7 +31,7 @@ class GraphList(object):
 
 
 class ProvList(object):
-    """List named graphs in the graph store."""
+    """List prov graphs in the graph store."""
 
     def on_get(self, req, resp):
         """Execution of the GET prov graph list request."""

@@ -38,7 +38,7 @@ class ProvTestCase(ProvenanceAPITestCase):
     @responses.activate
     @patch('prov.api.provenance.prov_task', autospec=True)
     def test_api_prov(self, mock):
-        """Test api prov everything ok."""
+        """Test API prov everything ok."""
         with open('tests/resources/prov_request.json') as datafile:
             graph_data = datafile.read().replace('\n', '')
 
@@ -64,7 +64,7 @@ class ProvTestCase(ProvenanceAPITestCase):
     @responses.activate
     @patch('prov.api.provenance.prov_task', autospec=True)
     def test_api_prov_array(self, mock):
-        """Test api prov everything ok with array."""
+        """Test API prov everything ok with array."""
         with open('tests/resources/prov_request_array.json') as datafile:
             graph_data = datafile.read().replace('\n', '')
 
