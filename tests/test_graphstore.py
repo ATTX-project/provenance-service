@@ -71,7 +71,7 @@ class GraphTestCase(GraphStoreTest):
     def test_prov_list(self):
         """Test graph list on graph endpoint."""
         list_query = quote("select ?g {{graph ?g {{?s ?p ?o}} filter(regex(str(?g), '{0}'))}} group by ?g".format(ATTXPROVURL))
-        with open('tests/resources/graph_list_request.json') as datafile1:
+        with open('tests/resources/prov_list_request.json') as datafile1:
             graph_data = json.load(datafile1)
         with open('tests/resources/prov_list_response.json') as datafile2:
             graph_list = json.load(datafile2)
