@@ -8,8 +8,8 @@ from prov.applib.graph_store import GraphStore
 from requests.exceptions import ConnectionError
 
 
-class ProvenanceTestCase(unittest.TestCase):
-    """Test for Provenance function."""
+class ProvenanceIndexTestCase(unittest.TestCase):
+    """Test for ProvenanceIndex function."""
 
     def setUp(self):
         """Set up test fixtures."""
