@@ -9,6 +9,7 @@ import httpretty
 from falcon import testing
 from prov.app import init_api
 from prov.applib.graph_store import GraphStore
+from prov.utils.prefixes import ATTXPROVURL
 
 
 class GraphStoreTest(testing.TestCase):
@@ -65,6 +66,26 @@ class GraphTestCase(GraphStoreTest):
         fuseki = GraphStore()
         with self.assertRaises(ConnectionError):
             fuseki._graph_list()
+
+    @responses.activate
+    def test_prov_list(self):
+        """Test graph list on graph endpoint."""
+        list_query = quote("select ?g {{graph ?g {{?s ?p ?o}} filter(regex(str(?g), '{0}'))}} group by ?g".format(ATTXPROVURL))
+        with open('tests/resources/prov_list_request.json') as datafile1:
+            graph_data = json.load(datafile1)
+        with open('tests/resources/prov_list_response.json') as datafile2:
+            graph_list = json.load(datafile2)
+        responses.add(responses.GET, "{0}/sparql?query={1}".format(self.request_address, list_query), json=graph_data, status=200)
+        fuseki = GraphStore()
+        result = fuseki._prov_list()
+        assert(result == graph_list)
+
+    @responses.activate
+    def test_prov_list_bad(self):
+        """Test ConnectionError prov graph list on graph endpoint."""
+        fuseki = GraphStore()
+        with self.assertRaises(ConnectionError):
+            fuseki._prov_list()
 
     @responses.activate
     def test_graph_stats(self):

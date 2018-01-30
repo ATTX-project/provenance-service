@@ -1,0 +1,4 @@
+{
+    "graphs": ["http://data.hulib.helsinki.fi/prov_onto", "http://data.hulib.helsinki.fi/prov_strategy"],
+    "graphsCount": 2
+}
