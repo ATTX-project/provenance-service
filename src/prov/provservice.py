@@ -59,23 +59,7 @@ def consumer():
     consumer_init = Consumer(broker['host'], broker['user'], broker['pass'], broker['queue'])
     consumer_init.start()
 
-
-@cli.command('indexer')
-def publisher():
-    """Consuming some messages."""
-    app_logger.info('Provenance indexer')
-    sint = 10
-    try:
-        sint = int(interval["timer"])
-    except ValueError:
-        pass
-    finally:
-        # schedule.every(sint).minutes.do(execute_indexing)
-        while True:
-            schedule.run_pending()
-            time.sleep(1)
-
-
+    
 class PROVService(gunicorn.app.base.BaseApplication):
     """Create Standalone Application Provenance Service."""
 
