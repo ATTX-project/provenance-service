@@ -63,8 +63,8 @@ def consumer():
 @cli.command('indexer')
 def publisher():
     while True:
-      schedule.run_pending()
-      time.sleep(1)
+        schedule.run_pending()
+        time.sleep(1)
 
 
 class PROVService(gunicorn.app.base.BaseApplication):
