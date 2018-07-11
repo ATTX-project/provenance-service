@@ -1,7 +1,7 @@
 import click
 import multiprocessing
-# import schedule
-# import time
+import schedule
+import time
 import gunicorn.app.base
 from prov.app import init_api
 from prov.utils.queue import init_celery
@@ -59,6 +59,11 @@ def consumer():
     consumer_init = Consumer(broker['host'], broker['user'], broker['pass'], broker['queue'])
     consumer_init.start()
 
+@cli.command('indexer')
+def publisher():
+    while True:
+            schedule.run_pending()
+            time.sleep(1)
 
 class PROVService(gunicorn.app.base.BaseApplication):
     """Create Standalone Application Provenance Service."""
