@@ -70,7 +70,7 @@ def publisher():
     except ValueError:
         pass
     finally:
-        #schedule.every(sint).minutes.do(execute_indexing)
+        # schedule.every(sint).minutes.do(execute_indexing)
         while True:
             schedule.run_pending()
             time.sleep(1)
